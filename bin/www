@@ -55,12 +55,14 @@ if (process.env.NODE_ENV === 'production') {
     // Log certificate details
     console.log('Certificate paths:', {
       key: process.env.SSL_KEY_PATH,
-      cert: process.env.SSL_CERT_PATH
+      cert: process.env.SSL_CERT_PATH,
+      chain: process.env.SSL_CHAIN_PATH
     });
 
     const httpsOptions = {
       key: fs.readFileSync(process.env.SSL_KEY_PATH),
       cert: fs.readFileSync(process.env.SSL_CERT_PATH),
+      ca: fs.readFileSync(process.env.SSL_CHAIN_PATH),
       minVersion: 'TLSv1.2',
       ciphers: [
         'ECDHE-ECDSA-AES128-GCM-SHA256',
@@ -69,24 +71,28 @@ if (process.env.NODE_ENV === 'production') {
         'ECDHE-RSA-AES256-GCM-SHA384',
       ].join(':'),
       honorCipherOrder: true,
-      // Add these options for better debugging
       requestCert: false,
       rejectUnauthorized: false
     };
     
-    httpsServer = https.createServer(httpsOptions, (req, res) => {
-      // Log every HTTPS request
-      console.log('\nIncoming HTTPS Request:', {
-        timestamp: new Date().toISOString(),
-        method: req.method,
-        url: req.url,
-        headers: req.headers
+    httpsServer = https.createServer(httpsOptions, app);
+    
+    // Add specific error handlers
+    httpsServer.on('error', (error) => {
+      console.error('\nHTTPS Server Error:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
       });
       
-      // Pass request to app
-      app(req, res);
+      // Check for specific error conditions
+      if (error.code === 'EACCES') {
+        console.error('Permission denied to bind to port 443. Try running with sudo or use setcap.');
+      } else if (error.code === 'EADDRINUSE') {
+        console.error('Port 443 is already in use. Check if another process is using it.');
+      }
     });
-    
+
     // Connection logging
     httpsServer.on('connection', (socket) => {
       console.log('\nNew TCP connection:', {
@@ -111,14 +117,6 @@ if (process.env.NODE_ENV === 'production') {
         message: err.message,
         stack: err.stack,
         remoteAddress: tlsSocket.remoteAddress
-      });
-    });
-
-    httpsServer.on('error', (error) => {
-      console.error('\nHTTPS Server Error:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack
       });
     });
 
