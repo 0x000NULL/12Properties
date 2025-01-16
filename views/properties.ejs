@@ -64,7 +64,8 @@
       <div class="properties-grid">
         <% properties.forEach(property => { %>
           <div class="property-card-large">
-            <div class="property-image" style="background-image: url('<%= property.mainImage %>')">
+            <div class="property-image-container">
+              <img src="<%= property.mainImage %>" alt="<%= property.title %>" class="property-image">
               <div class="property-status"><%= property.status %></div>
               <div class="property-price">$<%= property.price %></div>
             </div>

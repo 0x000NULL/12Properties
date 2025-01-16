@@ -29,17 +29,24 @@
 
     <main class="property-details-main">
       <div class="property-gallery">
-        <div class="main-image" style="background-image: url('<%= property.mainImage %>')">
-          <div class="property-price">$<%= property.price %></div>
-        </div>
-        <div class="thumbnail-grid">
-          <% if (property.images && property.images.length > 0) { %>
-            <% property.images.forEach(image => { %>
-              <div class="thumbnail" style="background-image: url('<%= image %>')"></div>
-            <% }); %>
-          <% } else { %>
-            <div class="no-images">No additional images available</div>
-          <% } %>
+        <div class="gallery-container">
+          <div class="main-image" style="background-image: url('<%= property.mainImage %>')">
+            <button class="gallery-nav prev-btn"><i class="fas fa-chevron-left"></i></button>
+            <button class="gallery-nav next-btn"><i class="fas fa-chevron-right"></i></button>
+            <div class="property-price">$<%= property.price %></div>
+          </div>
+          <div class="thumbnail-grid">
+            <% if (property.images && property.images.length > 0) { %>
+              <% property.images.forEach((image, index) => { %>
+                <div class="thumbnail <%= index === 0 ? 'active' : '' %>" 
+                     style="background-image: url('<%= image %>')" 
+                     data-image="<%= image %>">
+                </div>
+              <% }); %>
+            <% } else { %>
+              <div class="no-images">No additional images available</div>
+            <% } %>
+          </div>
         </div>
       </div>
 
@@ -129,5 +136,51 @@
         <p>&copy; 2024 12 Properties. All rights reserved.</p>
       </div>
     </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const mainImage = document.querySelector('.main-image');
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      const prevBtn = document.querySelector('.prev-btn');
+      const nextBtn = document.querySelector('.next-btn');
+      let currentIndex = 0;
+
+      // Function to update main image
+      function updateMainImage(imageUrl) {
+        mainImage.style.backgroundImage = `url('${imageUrl}')`;
+      }
+
+      // Function to update active thumbnail
+      function updateActiveThumbnail(index) {
+        thumbnails.forEach(thumb => thumb.classList.remove('active'));
+        thumbnails[index].classList.add('active');
+        currentIndex = index;
+      }
+
+      // Add click handlers to thumbnails
+      thumbnails.forEach((thumbnail, index) => {
+        thumbnail.addEventListener('click', () => {
+          const imageUrl = thumbnail.dataset.image;
+          updateMainImage(imageUrl);
+          updateActiveThumbnail(index);
+        });
+      });
+
+      // Navigation button handlers
+      prevBtn.addEventListener('click', () => {
+        currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+        const imageUrl = thumbnails[currentIndex].dataset.image;
+        updateMainImage(imageUrl);
+        updateActiveThumbnail(currentIndex);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        currentIndex = (currentIndex + 1) % thumbnails.length;
+        const imageUrl = thumbnails[currentIndex].dataset.image;
+        updateMainImage(imageUrl);
+        updateActiveThumbnail(currentIndex);
+      });
+    });
+    </script>
   </body>
 </html> 
