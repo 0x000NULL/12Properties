@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Property Management | 12 Properties</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Preload Font Awesome -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Load Stylesheets -->
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="/javascripts/fontLoader.js" defer></script>
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="logo">12 Properties</div>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/properties">Properties</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <span class="user-menu">
+          <i class="fas fa-user"></i>
+          <%= user.name %>
+          <form action="/auth/logout" method="POST" class="logout-form">
+            <button type="submit" class="btn-text">Logout</button>
+          </form>
+        </span>
+      </div>
+    </nav>
+
+    <main class="manage-main">
+      <div class="manage-header">
+        <h1>Property Management</h1>
+        <button class="btn-primary">
+          <i class="fas fa-plus"></i> Add Property
+        </button>
+      </div>
+
+      <div class="manage-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Properties</h3>
+            <p class="stat-number"><%= properties.length %></p>
+          </div>
+          <div class="stat-card">
+            <h3>Active Listings</h3>
+            <p class="stat-number"><%= properties.filter(p => p.status === 'Active').length %></p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Views</h3>
+            <p class="stat-number"><%= properties.reduce((sum, p) => sum + p.views, 0) %></p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Inquiries</h3>
+            <p class="stat-number"><%= properties.reduce((sum, p) => sum + p.inquiries, 0) %></p>
+          </div>
+        </div>
+
+        <div class="property-list">
+          <div class="list-header">
+            <h2>Your Properties</h2>
+            <div class="list-actions">
+              <input type="text" placeholder="Search properties..." class="search-input">
+              <select class="filter-select">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="sold">Sold</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="property-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Location</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Views</th>
+                  <th>Inquiries</th>
+                  <th>Last Modified</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% properties.forEach(property => { %>
+                  <tr>
+                    <td><%= property.title %></td>
+                    <td><%= property.location %></td>
+                    <td>$<%= property.price %></td>
+                    <td><span class="status-badge <%= property.status.toLowerCase() %>"><%= property.status %></span></td>
+                    <td><%= property.views %></td>
+                    <td><%= property.inquiries %></td>
+                    <td><%= property.lastModified %></td>
+                    <td class="actions">
+                      <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                      <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>12 Properties</h3>
+          <p>Your gateway to exceptional living</p>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p>Email: info@12mgt.com</p>
+          <p>Phone: +1 (555) 123-4567</p>
+        </div>
+        <div class="footer-section">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 12 Properties. All rights reserved.</p>
+      </div>
+    </footer>
+  </body>
+</html> 

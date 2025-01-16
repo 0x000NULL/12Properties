@@ -16,29 +16,24 @@ const MongoStore = require('connect-mongo');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const { router: authRouter, isAuthenticated } = require('./routes/auth');
+const manageRouter = require('./routes/manage');
 
 const app = express();
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-  family: 4 // Use IPv4, skip trying IPv6
-}).then(() => {
-  console.log('Connected to MongoDB successfully');
-}).catch(err => {
-  console.error('MongoDB connection error:', err.message);
-  console.log('Please make sure MongoDB is running and accessible');
-  // Don't exit the process, let the application continue without DB
-});
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-// Add this to handle MongoDB errors globally
-mongoose.connection.on('error', err => {
-  console.error('MongoDB connection error:', err);
-});
+// Basic middleware setup
+app.use(logger('dev'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(cookieParser());
+app.use(expressSanitizer());
+app.use(xssClean());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Security Middleware
+// Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -71,8 +66,8 @@ app.use(helmet({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100
 });
 app.use(limiter);
 
@@ -82,34 +77,122 @@ app.use(cors({
   credentials: true
 }));
 
-// Session configuration
-app.use(session({
+// Session configuration with in-memory store for development
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    ttl: 24 * 60 * 60 // Session TTL (1 day)
-  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
-}));
+};
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+// Initialize with in-memory session store
+app.use(session(sessionConfig));
 
-// Middleware
-app.use(logger('dev'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
-app.use(cookieParser());
-app.use(expressSanitizer());
-app.use(xssClean());
-app.use(express.static(path.join(__dirname, 'public')));
+// MongoDB Connection
+async function initializeDatabase() {
+  try {
+    // First, check if database already exists with any case
+    const adminClient = await mongoose.connect('mongodb://127.0.0.1:27017/admin', {
+      family: 4
+    });
+    
+    const adminDb = adminClient.connection.db;
+    const databases = await adminDb.admin().listDatabases();
+    const dbExists = databases.databases.some(
+      db => db.name.toLowerCase() === '12properties'
+    );
+    
+    // Disconnect from admin database
+    await mongoose.disconnect();
+    
+    // Connect to the correct database, using existing one if found
+    let dbName = '12properties';
+    if (dbExists) {
+      // Find the actual name with correct case
+      dbName = databases.databases.find(
+        db => db.name.toLowerCase() === '12properties'
+      ).name;
+      console.log(`Found existing database: ${dbName}`);
+    }
+    
+    // Update the connection URI with the correct database name
+    const uri = `mongodb://127.0.0.1:27017/${dbName}`;
+    console.log(`Connecting to database: ${dbName}`);
+    
+    // Create MongoDB session store
+    const mongoStore = MongoStore.create({
+      mongoUrl: uri,
+      ttl: 24 * 60 * 60 // Session TTL (1 day)
+    });
+    
+    // Update session middleware with MongoDB store
+    app.use(session({
+      ...sessionConfig,
+      store: mongoStore
+    }));
+    
+    return mongoose.connect(uri, {
+      family: 4
+    });
+  } catch (err) {
+    console.error('Database initialization error:', err.message);
+    if (err.code === 13297) {
+      console.log('\nDatabase case sensitivity issue detected.');
+      console.log('Please follow these steps to resolve:');
+      console.log('1. Open MongoDB shell: mongosh');
+      console.log('2. Switch to the database: use 12Properties');
+      console.log('3. Drop the database: db.dropDatabase()');
+      console.log('4. Exit MongoDB shell: exit');
+      console.log('5. Restart the application\n');
+    }
+    throw err;
+  }
+}
+
+// Initialize database connection
+initializeDatabase()
+  .then(() => {
+    console.log('Connected to MongoDB successfully');
+  })
+  .catch(err => {
+    console.error('Failed to initialize database');
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Critical database error in production - shutting down');
+      process.exit(1);
+    } else {
+      console.log('Development mode - using in-memory session store');
+    }
+  });
+
+// Add this to handle MongoDB errors globally
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
+  if (err.code === 13297) {
+    console.log('\nDatabase case sensitivity issue detected.');
+    console.log('Please follow these steps to resolve:');
+    console.log('1. Open MongoDB shell: mongosh');
+    console.log('2. Switch to the database: use 12Properties');
+    console.log('3. Drop the database: db.dropDatabase()');
+    console.log('4. Exit MongoDB shell: exit');
+    console.log('5. Restart the application\n');
+  }
+});
+
+// Handle application shutdown
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+});
 
 // Security Headers
 app.use((req, res, next) => {
@@ -129,10 +212,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// Routes (moved after all middleware)
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
+app.use('/manage', manageRouter);
+
+// Redirect /login to /auth/login
+app.get('/login', (req, res) => {
+  res.redirect('/auth/login');
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -3,6 +3,11 @@ const router = express.Router();
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 
+// Redirect from /login to /auth/login
+router.get('/', function(req, res) {
+  res.redirect('/auth/login');
+});
+
 // Middleware to check if user is authenticated
 const isAuthenticated = (req, res, next) => {
   if (req.session.user) {
@@ -21,12 +26,14 @@ const validateLogin = [
 // Login page
 router.get('/login', function(req, res, next) {
   res.render('login', { 
-    isLoggedIn: !!req.session.user,
-    user: req.session.user || null,
+    isLoggedIn: !!req.session?.user,
+    user: req.session?.user || null,
     error: req.session.error
   });
   // Clear any error messages after displaying them
-  delete req.session.error;
+  if (req.session) {
+    delete req.session.error;
+  }
 });
 
 // Login POST handler
