@@ -46,10 +46,18 @@ const httpServer = http.createServer((req, res) => {
   }
 });
 
+// Enhanced HTTPS server configuration
 let httpsServer;
 if (process.env.NODE_ENV === 'production') {
   try {
     console.log('\nInitializing HTTPS server...');
+    
+    // Log certificate details
+    console.log('Certificate paths:', {
+      key: process.env.SSL_KEY_PATH,
+      cert: process.env.SSL_CERT_PATH
+    });
+
     const httpsOptions = {
       key: fs.readFileSync(process.env.SSL_KEY_PATH),
       cert: fs.readFileSync(process.env.SSL_CERT_PATH),
@@ -60,29 +68,79 @@ if (process.env.NODE_ENV === 'production') {
         'ECDHE-ECDSA-AES256-GCM-SHA384',
         'ECDHE-RSA-AES256-GCM-SHA384',
       ].join(':'),
-      honorCipherOrder: true
+      honorCipherOrder: true,
+      // Add these options for better debugging
+      requestCert: false,
+      rejectUnauthorized: false
     };
     
-    httpsServer = https.createServer(httpsOptions, app);
+    httpsServer = https.createServer(httpsOptions, (req, res) => {
+      // Log every HTTPS request
+      console.log('\nIncoming HTTPS Request:', {
+        timestamp: new Date().toISOString(),
+        method: req.method,
+        url: req.url,
+        headers: req.headers
+      });
+      
+      // Pass request to app
+      app(req, res);
+    });
     
-    // Add specific HTTPS error handlers
-    httpsServer.on('tlsClientError', (err, socket) => {
-      console.error('TLS Client Error:', {
+    // Connection logging
+    httpsServer.on('connection', (socket) => {
+      console.log('\nNew TCP connection:', {
+        remoteAddress: socket.remoteAddress,
+        remotePort: socket.remotePort
+      });
+    });
+
+    httpsServer.on('secureConnection', (tlsSocket) => {
+      console.log('\nNew TLS connection:', {
+        authorized: tlsSocket.authorized,
+        protocol: tlsSocket.getProtocol(),
+        cipher: tlsSocket.getCipher(),
+        remoteAddress: tlsSocket.remoteAddress
+      });
+    });
+
+    // Error handlers with detailed logging
+    httpsServer.on('tlsClientError', (err, tlsSocket) => {
+      console.error('\nTLS Client Error:', {
         code: err.code,
         message: err.message,
-        stack: err.stack
+        stack: err.stack,
+        remoteAddress: tlsSocket.remoteAddress
       });
     });
 
     httpsServer.on('error', (error) => {
-      console.error('HTTPS Server Error:', {
+      console.error('\nHTTPS Server Error:', {
         code: error.code,
         message: error.message,
         stack: error.stack
       });
     });
+
+    // Timeout handling
+    httpsServer.on('timeout', (socket) => {
+      console.log('\nConnection timeout:', {
+        remoteAddress: socket.remoteAddress,
+        remotePort: socket.remotePort
+      });
+    });
+
+    // Close handling
+    httpsServer.on('close', () => {
+      console.log('\nHTTPS server closed');
+    });
+
   } catch (error) {
-    console.error('Failed to initialize HTTPS server:', error);
+    console.error('\nFailed to initialize HTTPS server:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 }
@@ -91,18 +149,27 @@ if (process.env.NODE_ENV === 'production') {
  * Listen on provided ports, on all network interfaces.
  */
 httpServer.listen(httpPort, () => {
-  logServerInfo('HTTP', httpPort);
+  console.log(`\nHTTP server running on port ${httpPort}`);
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('Node version:', process.version);
 });
 
 if (httpsServer) {
   httpsServer.listen(httpsPort, () => {
-    logServerInfo('HTTPS', httpsPort);
+    console.log(`\nHTTPS server running on port ${httpsPort}`);
+    console.log('TLS version:', process.versions.tls);
+    console.log('OpenSSL version:', process.versions.openssl);
   });
 }
 
-// Graceful shutdown handling
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('\nReceived SIGTERM signal');
+  httpServer.close(() => console.log('HTTP server closed'));
+  if (httpsServer) {
+    httpsServer.close(() => console.log('HTTPS server closed'));
+  }
+});
 
 /**
  * Normalize a port into a number, string, or false.
