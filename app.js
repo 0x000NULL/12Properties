@@ -21,11 +21,15 @@ const app = express();
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  family: 4 // Use IPv4, skip trying IPv6
 }).then(() => {
-  console.log('Connected to MongoDB');
+  console.log('Connected to MongoDB successfully');
 }).catch(err => {
-  console.error('MongoDB connection error:', err);
+  console.error('MongoDB connection error:', err.message);
+  console.log('Please make sure MongoDB is running and accessible');
+  // Don't exit the process, let the application continue without DB
 });
 
 // Security Middleware
@@ -33,10 +37,26 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com",
+        "https://cdnjs.cloudflare.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://fonts.gstatic.com",
+        "https://cdnjs.cloudflare.com",
+        "data:"
+      ],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
       connectSrc: ["'self'"],
+      preconnect: [
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+        "https://cdnjs.cloudflare.com"
+      ]
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -90,6 +110,16 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+// Add preload headers for critical resources
+app.use((req, res, next) => {
+  res.setHeader('Link', [
+    '<https://fonts.googleapis.com>; rel=preconnect',
+    '<https://fonts.gstatic.com>; rel=preconnect',
+    '<https://cdnjs.cloudflare.com>; rel=preconnect'
+  ].join(', '));
   next();
 });
 
