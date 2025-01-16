@@ -30,7 +30,7 @@
       <div class="hero-content">
         <h1>Discover Extraordinary Living</h1>
         <p>Curated collection of the world's finest luxury properties</p>
-        <button class="cta-button">Explore Properties</button>
+        <a href="/properties" class="cta-button">Explore Properties</a>
       </div>
     </header>
 
@@ -49,6 +49,9 @@
                 <span><i class="fas fa-bed"></i> <%= property.beds %> Beds</span>
                 <span><i class="fas fa-bath"></i> <%= property.baths %> Baths</span>
                 <span><i class="fas fa-ruler-combined"></i> <%= property.sqft %> sq.ft</span>
+              </div>
+              <div class="property-actions">
+                <a href="/property/<%= property.id %>" class="btn-view">View Details</a>
               </div>
             </div>
           </div>

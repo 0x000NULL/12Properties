@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= property.title %> | 12 Properties</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Preload Font Awesome -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Load Stylesheets -->
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="/javascripts/fontLoader.js" defer></script>
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="logo">12 Properties</div>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/properties">Properties</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </nav>
+
+    <main class="property-details-main">
+      <div class="property-gallery">
+        <div class="main-image" style="background-image: url('<%= property.image %>')">
+          <div class="property-price">$<%= property.price %></div>
+        </div>
+        <div class="thumbnail-grid">
+          <% property.additionalImages.forEach(image => { %>
+            <div class="thumbnail" style="background-image: url('<%= image %>')"></div>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="property-content">
+        <div class="property-header">
+          <h1><%= property.title %></h1>
+          <p class="location"><i class="fas fa-map-marker-alt"></i> <%= property.location %></p>
+        </div>
+
+        <div class="property-stats">
+          <div class="stat">
+            <i class="fas fa-bed"></i>
+            <span><%= property.beds %> Beds</span>
+          </div>
+          <div class="stat">
+            <i class="fas fa-bath"></i>
+            <span><%= property.baths %> Baths</span>
+          </div>
+          <div class="stat">
+            <i class="fas fa-ruler-combined"></i>
+            <span><%= property.sqft %> sq.ft</span>
+          </div>
+        </div>
+
+        <div class="property-description">
+          <h2>Description</h2>
+          <p><%= property.description %></p>
+        </div>
+
+        <div class="property-features">
+          <h2>Features</h2>
+          <div class="features-grid">
+            <% property.features.forEach(feature => { %>
+              <div class="feature">
+                <i class="fas fa-check"></i>
+                <span><%= feature %></span>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <div class="agent-info">
+          <h2>Contact Agent</h2>
+          <div class="agent-card">
+            <div class="agent-image" style="background-image: url('<%= property.agent.image %>')"></div>
+            <div class="agent-details">
+              <h3><%= property.agent.name %></h3>
+              <p><i class="fas fa-phone"></i> <%= property.agent.phone %></p>
+              <p><i class="fas fa-envelope"></i> <%= property.agent.email %></p>
+              <button class="contact-agent-btn">Schedule Viewing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>12 Properties</h3>
+          <p>Your gateway to exceptional living</p>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p>Email: info@12mgt.com</p>
+          <p>Phone: +1 (555) 123-4567</p>
+        </div>
+        <div class="footer-section">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 12 Properties. All rights reserved.</p>
+      </div>
+    </footer>
+  </body>
+</html> 

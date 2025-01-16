@@ -155,6 +155,25 @@ body {
   color: #666;
 }
 
+.property-actions {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+.btn-view {
+  display: inline-block;
+  text-decoration: none;
+  padding: 0.8rem 1.5rem;
+  background: #333;
+  color: white;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.btn-view:hover {
+  background: #555;
+}
+
 /* Contact Form */
 .contact-container {
   max-width: 600px;
@@ -350,6 +369,8 @@ footer {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-view {
@@ -425,5 +446,163 @@ footer {
   
   .filters select {
     width: 100%;
+  }
+}
+
+/* Property Details Page Styles */
+.property-details-main {
+  padding: 120px 5% 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.property-gallery {
+  margin-bottom: 3rem;
+}
+
+.main-image {
+  height: 500px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.thumbnail {
+  height: 100px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.thumbnail:hover {
+  opacity: 0.8;
+}
+
+.property-header {
+  margin-bottom: 2rem;
+}
+
+.property-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.property-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat i {
+  color: #666;
+}
+
+.property-description,
+.property-features {
+  margin-bottom: 3rem;
+}
+
+.property-description h2,
+.property-features h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feature i {
+  color: #28a745;
+}
+
+.agent-card {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.agent-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+}
+
+.agent-details h3 {
+  font-family: 'Playfair Display', serif;
+  margin-bottom: 1rem;
+}
+
+.agent-details p {
+  margin-bottom: 0.5rem;
+}
+
+.contact-agent-btn {
+  margin-top: 1rem;
+  padding: 0.8rem 1.5rem;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.contact-agent-btn:hover {
+  background: #555;
+}
+
+/* Responsive Design for Property Details */
+@media (max-width: 768px) {
+  .property-details-main {
+    padding: 100px 5% 40px;
+  }
+
+  .main-image {
+    height: 300px;
+  }
+
+  .agent-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .property-stats {
+    flex-direction: column;
+    gap: 1rem;
   }
 }
