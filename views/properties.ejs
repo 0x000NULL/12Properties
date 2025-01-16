@@ -64,8 +64,8 @@
       <div class="properties-grid">
         <% properties.forEach(property => { %>
           <div class="property-card-large">
-            <div class="property-image" style="background-image: url('<%= property.image %>')">
-              <div class="property-status">Available</div>
+            <div class="property-image" style="background-image: url('<%= property.mainImage %>')">
+              <div class="property-status"><%= property.status %></div>
               <div class="property-price">$<%= property.price %></div>
             </div>
             <div class="property-info">
@@ -74,13 +74,13 @@
               <div class="property-details">
                 <span><i class="fas fa-bed"></i> <%= property.beds %> Beds</span>
                 <span><i class="fas fa-bath"></i> <%= property.baths %> Baths</span>
-                <span><i class="fas fa-ruler-combined"></i> <%= property.sqft %> sq.ft</span>
+                <span><i class="fas fa-ruler-combined"></i> <%= property.sqft.toLocaleString() %> sq.ft</span>
               </div>
               <p class="property-description">
-                Luxurious <%= property.title.toLowerCase() %> featuring stunning views, premium finishes, and exclusive amenities.
+                <%= property.description.substring(0, 150) %>...
               </p>
               <div class="property-actions">
-                <a href="/property/<%= property.id %>" class="btn-view">View Details</a>
+                <a href="/property/<%= property._id %>" class="btn-view">View Details</a>
                 <button class="btn-contact">Contact Agent</button>
               </div>
             </div>

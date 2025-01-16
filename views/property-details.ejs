@@ -29,13 +29,17 @@
 
     <main class="property-details-main">
       <div class="property-gallery">
-        <div class="main-image" style="background-image: url('<%= property.image %>')">
+        <div class="main-image" style="background-image: url('<%= property.mainImage %>')">
           <div class="property-price">$<%= property.price %></div>
         </div>
         <div class="thumbnail-grid">
-          <% property.additionalImages.forEach(image => { %>
-            <div class="thumbnail" style="background-image: url('<%= image %>')"></div>
-          <% }); %>
+          <% if (property.images && property.images.length > 0) { %>
+            <% property.images.forEach(image => { %>
+              <div class="thumbnail" style="background-image: url('<%= image %>')"></div>
+            <% }); %>
+          <% } else { %>
+            <div class="no-images">No additional images available</div>
+          <% } %>
         </div>
       </div>
 
@@ -80,13 +84,22 @@
         <div class="agent-info">
           <h2>Contact Agent</h2>
           <div class="agent-card">
-            <div class="agent-image" style="background-image: url('<%= property.agent.image %>')"></div>
-            <div class="agent-details">
-              <h3><%= property.agent.name %></h3>
-              <p><i class="fas fa-phone"></i> <%= property.agent.phone %></p>
-              <p><i class="fas fa-envelope"></i> <%= property.agent.email %></p>
-              <button class="contact-agent-btn">Schedule Viewing</button>
-            </div>
+            <% if (property.realtor) { %>
+              <div class="agent-image" style="background-image: url('<%= property.realtor.image %>')"></div>
+              <div class="agent-details">
+                <h3><%= property.realtor.name %></h3>
+                <p><i class="fas fa-phone"></i> <%= property.realtor.phone %></p>
+                <p><i class="fas fa-envelope"></i> <%= property.realtor.email %></p>
+                <button class="contact-agent-btn">Schedule Viewing</button>
+              </div>
+            <% } else { %>
+              <div class="agent-details">
+                <h3>Contact Our Office</h3>
+                <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                <p><i class="fas fa-envelope"></i> info@12mgt.com</p>
+                <button class="contact-agent-btn">Schedule Viewing</button>
+              </div>
+            <% } %>
           </div>
         </div>
       </div>

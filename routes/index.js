@@ -1,127 +1,83 @@
 var express = require('express');
 var router = express.Router();
+const Property = require('../models/Property');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  // Sample property data
-  const properties = [
-    {
-      id: "1",
-      title: "Oceanfront Villa",
-      location: "Malibu, California",
-      price: "12,500,000",
-      beds: 6,
-      baths: 8,
-      sqft: "8,500",
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750"
-    },
-    {
-      id: "2",
-      title: "Modern Penthouse",
-      location: "Manhattan, New York",
-      price: "8,900,000",
-      beds: 4,
-      baths: 4.5,
-      sqft: "4,200",
-      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9"
-    },
-    {
-      id: "3",
-      title: "Mediterranean Estate",
-      location: "Beverly Hills, California",
-      price: "15,750,000",
-      beds: 8,
-      baths: 10,
-      sqft: "12,000",
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-    }
-  ];
+router.get('/', async function(req, res, next) {
+  try {
+    // Get 3 featured properties
+    const properties = await Property.find({ status: 'Active' })
+      .sort({ views: -1 })
+      .limit(3);
 
-  res.render('index', { 
-    properties: properties
-  });
+    // Format price for display
+    const formattedProperties = properties.map(p => ({
+      ...p.toObject(),
+      price: p.price.toLocaleString()
+    }));
+
+    res.render('index', { 
+      properties: formattedProperties
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/properties', function(req, res, next) {
-  // Using the same property data for now
-  const properties = [
-    {
-      id: "1",
-      title: "Oceanfront Villa",
-      location: "Malibu, California",
-      price: "12,500,000",
-      beds: 6,
-      baths: 8,
-      sqft: "8,500",
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750"
-    },
-    {
-      id: "2",
-      title: "Modern Penthouse",
-      location: "Manhattan, New York",
-      price: "8,900,000",
-      beds: 4,
-      baths: 4.5,
-      sqft: "4,200",
-      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9"
-    },
-    {
-      id: "3",
-      title: "Mediterranean Estate",
-      location: "Beverly Hills, California",
-      price: "15,750,000",
-      beds: 8,
-      baths: 10,
-      sqft: "12,000",
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-    }
-  ];
+router.get('/properties', async function(req, res, next) {
+  try {
+    // Get all active properties
+    const properties = await Property.find({ status: 'Active' })
+      .sort({ createdAt: -1 });
 
-  res.render('properties', { 
-    properties: properties
-  });
+    // Format price for display
+    const formattedProperties = properties.map(p => ({
+      ...p.toObject(),
+      price: p.price.toLocaleString()
+    }));
+
+    res.render('properties', { 
+      properties: formattedProperties
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/property/:id', function(req, res, next) {
-  // In a real app, you would fetch this from a database using req.params.id
-  // For now, we'll use sample data
-  const properties = [
-    {
-      id: "1",
-      title: "Oceanfront Villa",
-      location: "Malibu, California",
-      price: "12,500,000",
-      beds: 6,
-      baths: 8,
-      sqft: "8,500",
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
-      description: "Spectacular oceanfront villa offering breathtaking views of the Pacific. This luxurious residence features high-end finishes throughout, a gourmet kitchen with top-of-the-line appliances, and an infinity pool overlooking the ocean.",
-      features: [
-        "Infinity Pool",
-        "Wine Cellar",
-        "Home Theater",
-        "Private Beach Access",
-        "Smart Home Technology",
-        "4-Car Garage"
-      ],
-      additionalImages: [
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c"
-      ],
-      agent: {
-        name: "Sarah Johnson",
-        phone: "+1 (310) 555-0123",
-        email: "sarah@12mgt.com",
-        image: "https://images.unsplash.com/photo-1560250097-0b93528c311a"
+router.get('/property/:id', async function(req, res, next) {
+  try {
+    const property = await Property.findById(req.params.id)
+      .populate('realtor', 'name email phone image');
+    
+    if (!property) {
+      return res.status(404).render('error', { 
+        message: 'Property not found',
+        error: { status: 404 }
+      });
+    }
+
+    // Increment views
+    property.views += 1;
+    await property.save();
+
+    // Format price for display and ensure arrays exist
+    const formattedProperty = {
+      ...property.toObject(),
+      price: property.price.toLocaleString(),
+      images: property.images || [],
+      features: property.features || [],
+      realtor: property.realtor || {
+        name: 'Contact Us',
+        email: 'info@12mgt.com',
+        phone: '+1 (555) 123-4567',
+        image: '/images/default-agent.jpg'
       }
-    }
-    // Add more properties as needed
-  ];
+    };
 
-  const property = properties.find(p => p.id === req.params.id) || properties[0];
-  
-  res.render('property-details', { property });
+    res.render('property-details', { property: formattedProperty });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;
