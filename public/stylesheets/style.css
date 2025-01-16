@@ -408,6 +408,7 @@ footer {
 .pagination {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.5rem;
   margin-top: 3rem;
 }
@@ -420,16 +421,27 @@ footer {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #333;
 }
 
 .page-btn.active {
   background: #333;
   color: white;
   border-color: #333;
+  cursor: default;
 }
 
 .page-btn:hover:not(.active) {
   background: #f8f9fa;
+}
+
+.page-dots {
+  color: #666;
+  padding: 0 4px;
 }
 
 /* Responsive Design for Properties Page */

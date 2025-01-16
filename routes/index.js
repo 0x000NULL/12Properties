@@ -24,23 +24,42 @@ router.get('/', async function(req, res, next) {
   }
 });
 
-router.get('/properties', async function(req, res, next) {
+router.get('/properties', async (req, res) => {
   try {
-    // Get all active properties
+    const page = parseInt(req.query.page) || 1;
+    const limit = 9; // Number of properties per page
+    
+    // Get total count of active properties
+    const totalProperties = await Property.countDocuments({ status: 'Active' });
+    const totalPages = Math.ceil(totalProperties / limit);
+    
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+    
+    // Get properties for current page
     const properties = await Property.find({ status: 'Active' })
-      .sort({ createdAt: -1 });
-
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Sort by newest first
+    
     // Format price for display
     const formattedProperties = properties.map(p => ({
       ...p.toObject(),
       price: p.price.toLocaleString()
     }));
 
-    res.render('properties', { 
-      properties: formattedProperties
+    res.render('properties', {
+      properties: formattedProperties,
+      currentPage: page,
+      totalPages,
+      totalProperties
     });
   } catch (error) {
-    next(error);
+    console.error('Error fetching properties:', error);
+    res.status(500).render('error', { 
+      message: 'Error loading properties',
+      error
+    });
   }
 });
 
