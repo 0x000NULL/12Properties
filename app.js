@@ -50,14 +50,14 @@ app.use(helmet({
         "https://cdnjs.cloudflare.com",
         "data:"
       ],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'",
+        "'unsafe-eval'"
+      ],
+      scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
       connectSrc: ["'self'"],
-      preconnect: [
-        "https://fonts.googleapis.com",
-        "https://fonts.gstatic.com",
-        "https://cdnjs.cloudflare.com"
-      ]
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -205,9 +205,9 @@ app.use((req, res, next) => {
 // Add preload headers for critical resources
 app.use((req, res, next) => {
   res.setHeader('Link', [
-    '<https://fonts.googleapis.com>; rel=preconnect',
-    '<https://fonts.gstatic.com>; rel=preconnect',
-    '<https://cdnjs.cloudflare.com>; rel=preconnect'
+    '<https://fonts.googleapis.com>; rel=preconnect; crossorigin',
+    '<https://fonts.gstatic.com>; rel=preconnect; crossorigin',
+    '<https://cdnjs.cloudflare.com>; rel=preconnect; crossorigin'
   ].join(', '));
   next();
 });

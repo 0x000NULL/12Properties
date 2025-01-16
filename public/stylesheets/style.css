@@ -53,6 +53,7 @@ body {
               url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c');
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,6 +75,16 @@ body {
 .hero-content p {
   font-size: 1.2rem;
   margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-content p {
+    font-size: 1rem;
+  }
 }
 
 /* Buttons */
@@ -117,13 +128,27 @@ body {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-.property-image {
-  height: 250px;
+.property-card .property-image {
+  width: 100%;
+  padding-top: 66.67%;
   background-size: cover;
   background-position: center;
   position: relative;
+  background-repeat: no-repeat;
+  transition: all 0.3s ease;
+}
+
+.property-card:hover {
+  transform: translateY(-5px);
+}
+
+.property-card:hover .property-image {
+  transform: scale(1.05);
 }
 
 .property-price {
@@ -143,30 +168,36 @@ body {
 .property-info h3 {
   font-family: 'Playfair Display', serif;
   margin-bottom: 0.5rem;
+  font-size: 1.3rem;
 }
 
 .property-location {
   color: #666;
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .property-details {
   display: flex;
   justify-content: space-between;
   color: #666;
+  margin-bottom: 1rem;
 }
 
-.property-actions {
-  margin-top: 1rem;
-  text-align: right;
+.property-details span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .btn-view {
   display: inline-block;
-  text-decoration: none;
   padding: 0.8rem 1.5rem;
   background: #333;
   color: white;
+  text-decoration: none;
   border-radius: 4px;
   transition: background 0.3s ease;
 }
@@ -1010,5 +1041,191 @@ th {
   .gallery-nav {
     width: 35px;
     height: 35px;
+  }
+}
+
+.alert {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.alert-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.alert-info {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+/* Add these styles to your existing CSS */
+.property-table td small {
+  color: #666;
+  font-size: 0.85em;
+  display: block;
+  margin-top: 2px;
+}
+
+.property-table td {
+  vertical-align: middle;
+}
+
+/* Property Form Styles */
+.property-form-main {
+  padding: 120px 5% 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.form-container h1 {
+  font-family: 'Playfair Display', serif;
+  margin-bottom: 2rem;
+}
+
+.property-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.current-image {
+  margin-top: 0.5rem;
+}
+
+.current-image img {
+  max-width: 200px;
+  border-radius: 4px;
+}
+
+.current-image p {
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-secondary {
+  padding: 0.8rem 1.5rem;
+  background: #f3f4f6;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .properties-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .property-image {
+    height: 200px;
+  }
+}
+
+/* Add a hover effect to zoom in slightly on the image */
+.property-card:hover .property-image {
+  transform: scale(1.05);
+}
+
+/* Ensure the image container maintains aspect ratio */
+.property-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Adjust responsive height for mobile */
+@media (max-width: 768px) {
+  .property-card .property-image {
+    height: 200px;
+  }
+}
+
+/* Update responsive styles */
+@media (max-width: 768px) {
+  .property-card .property-image {
+    padding-top: 75%;
   }
 }

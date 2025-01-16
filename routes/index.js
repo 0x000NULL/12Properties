@@ -5,22 +5,17 @@ const Property = require('../models/Property');
 /* GET home page. */
 router.get('/', async function(req, res, next) {
   try {
-    // Get 3 featured properties
     const properties = await Property.find({ status: 'Active' })
-      .sort({ views: -1 })
-      .limit(3);
-
-    // Format price for display
-    const formattedProperties = properties.map(p => ({
-      ...p.toObject(),
-      price: p.price.toLocaleString()
-    }));
+      .sort({ createdAt: -1 })
+      .limit(6); // Show only 6 featured properties
 
     res.render('index', { 
-      properties: formattedProperties
+      title: 'Luxury Estates | Premium Properties',
+      properties: properties,
+      user: req.session.user || null
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 });
 

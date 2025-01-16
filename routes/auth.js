@@ -66,6 +66,8 @@ router.post('/login', validateLogin, async function(req, res, next) {
     // Store user in session (excluding password)
     const userObject = user.toObject();
     delete userObject.password;
+    // Ensure _id is stored as string
+    userObject._id = userObject._id.toString();
     req.session.user = userObject;
     
     res.redirect('/manage');

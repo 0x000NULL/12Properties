@@ -37,30 +37,25 @@
     <main class="manage-main">
       <div class="manage-header">
         <h1>Property Management</h1>
-        <button class="btn-primary">
-          <i class="fas fa-plus"></i> Add Property
-        </button>
+        <form action="/manage/new" method="GET" style="display: inline;">
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-plus"></i> Add Property
+          </button>
+        </form>
       </div>
 
       <div class="manage-content">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>Total Properties</h3>
-            <p class="stat-number"><%= properties.length %></p>
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-error">
+            <%= error %>
           </div>
-          <div class="stat-card">
-            <h3>Active Listings</h3>
-            <p class="stat-number"><%= properties.filter(p => p.status === 'Active').length %></p>
+        <% } %>
+
+        <% if (properties.length === 0) { %>
+          <div class="alert alert-info">
+            No properties found. Click the "Add Property" button to create your first listing.
           </div>
-          <div class="stat-card">
-            <h3>Total Views</h3>
-            <p class="stat-number"><%= properties.reduce((sum, p) => sum + p.views, 0) %></p>
-          </div>
-          <div class="stat-card">
-            <h3>Total Inquiries</h3>
-            <p class="stat-number"><%= properties.reduce((sum, p) => sum + p.inquiries, 0) %></p>
-          </div>
-        </div>
+        <% } %>
 
         <div class="property-list">
           <div class="list-header">
@@ -69,9 +64,9 @@
               <input type="text" placeholder="Search properties..." class="search-input">
               <select class="filter-select">
                 <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="pending">Pending</option>
-                <option value="sold">Sold</option>
+                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
+                <option value="Sold">Sold</option>
               </select>
             </div>
           </div>
@@ -84,6 +79,9 @@
                   <th>Location</th>
                   <th>Price</th>
                   <th>Status</th>
+                  <% if (isAdmin) { %>
+                    <th>Realtor</th>
+                  <% } %>
                   <th>Views</th>
                   <th>Inquiries</th>
                   <th>Last Modified</th>
@@ -95,14 +93,30 @@
                   <tr>
                     <td><%= property.title %></td>
                     <td><%= property.location %></td>
-                    <td>$<%= property.price %></td>
+                    <td>$<%= property.price.toLocaleString() %></td>
                     <td><span class="status-badge <%= property.status.toLowerCase() %>"><%= property.status %></span></td>
+                    <% if (isAdmin) { %>
+                      <td>
+                        <%= property.realtor.name %><br>
+                        <small><%= property.realtor.email %></small>
+                      </td>
+                    <% } %>
                     <td><%= property.views %></td>
                     <td><%= property.inquiries %></td>
-                    <td><%= property.lastModified %></td>
+                    <td><%= new Date(property.lastModified).toLocaleDateString() %></td>
                     <td class="actions">
-                      <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
-                      <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                      <form action="/manage/edit/<%= property._id %>" method="GET" style="display: inline;">
+                        <button type="submit" class="btn-icon" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                      </form>
+                      <form action="/manage/delete/<%= property._id %>" method="POST" 
+                            class="delete-form" style="display: inline;"
+                            data-property-id="<%= property._id %>">
+                        <button type="submit" class="btn-icon" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </form>
                     </td>
                   </tr>
                 <% }); %>
@@ -137,5 +151,7 @@
         <p>&copy; 2024 12 Properties. All rights reserved.</p>
       </div>
     </footer>
+
+    <script src="/javascripts/manage.js"></script>
   </body>
 </html> 
