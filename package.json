@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "NODE_ENV=production node ./bin/www",
     "manage-users": "node scripts/manage-users.js",
     "init-db": "node scripts/init-db.js",
     "test-ssl": "node scripts/test-ssl.js",
