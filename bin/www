@@ -31,6 +31,22 @@ const logServerInfo = (type, port) => {
 };
 
 /**
+ * Normalize a port into a number, string, or false.
+ */
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+  if (isNaN(port)) {
+    console.error(`Invalid port value: ${val}`);
+    process.exit(1);
+  }
+  if (port <= 0) {
+    console.error(`Port must be > 0, got: ${port}`);
+    process.exit(1);
+  }
+  return port;
+}
+
+/**
  * Create HTTP and HTTPS servers.
  */
 const httpServer = http.createServer((req, res) => {
@@ -52,13 +68,6 @@ if (process.env.NODE_ENV === 'production') {
   try {
     console.log('\nInitializing HTTPS server...');
     
-    // Log certificate details
-    console.log('Certificate paths:', {
-      key: process.env.SSL_KEY_PATH,
-      cert: process.env.SSL_CERT_PATH,
-      chain: process.env.SSL_CHAIN_PATH
-    });
-
     const httpsOptions = {
       key: fs.readFileSync(process.env.SSL_KEY_PATH),
       cert: fs.readFileSync(process.env.SSL_CERT_PATH),
@@ -70,121 +79,83 @@ if (process.env.NODE_ENV === 'production') {
         'ECDHE-ECDSA-AES256-GCM-SHA384',
         'ECDHE-RSA-AES256-GCM-SHA384',
       ].join(':'),
-      honorCipherOrder: true,
-      requestCert: false,
-      rejectUnauthorized: false
+      honorCipherOrder: true
     };
     
     httpsServer = https.createServer(httpsOptions, app);
-    
-    // Add specific error handlers
-    httpsServer.on('error', (error) => {
-      console.error('\nHTTPS Server Error:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack
-      });
-      
-      // Check for specific error conditions
-      if (error.code === 'EACCES') {
-        console.error('Permission denied to bind to port 443. Try running with sudo or use setcap.');
-      } else if (error.code === 'EADDRINUSE') {
-        console.error('Port 443 is already in use. Check if another process is using it.');
-      }
-    });
-
-    // Connection logging
-    httpsServer.on('connection', (socket) => {
-      console.log('\nNew TCP connection:', {
-        remoteAddress: socket.remoteAddress,
-        remotePort: socket.remotePort
-      });
-    });
-
-    httpsServer.on('secureConnection', (tlsSocket) => {
-      console.log('\nNew TLS connection:', {
-        authorized: tlsSocket.authorized,
-        protocol: tlsSocket.getProtocol(),
-        cipher: tlsSocket.getCipher(),
-        remoteAddress: tlsSocket.remoteAddress
-      });
-    });
-
-    // Error handlers with detailed logging
-    httpsServer.on('tlsClientError', (err, tlsSocket) => {
-      console.error('\nTLS Client Error:', {
-        code: err.code,
-        message: err.message,
-        stack: err.stack,
-        remoteAddress: tlsSocket.remoteAddress
-      });
-    });
-
-    // Timeout handling
-    httpsServer.on('timeout', (socket) => {
-      console.log('\nConnection timeout:', {
-        remoteAddress: socket.remoteAddress,
-        remotePort: socket.remotePort
-      });
-    });
-
-    // Close handling
-    httpsServer.on('close', () => {
-      console.log('\nHTTPS server closed');
-    });
-
   } catch (error) {
-    console.error('\nFailed to initialize HTTPS server:', {
-      code: error.code,
-      message: error.message,
-      stack: error.stack
-    });
+    console.error('Failed to initialize HTTPS server:', error);
     process.exit(1);
   }
 }
 
 /**
- * Listen on provided ports, on all network interfaces.
+ * Start servers with explicit error handling
  */
-httpServer.listen(httpPort, () => {
-  console.log(`\nHTTP server running on port ${httpPort}`);
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('Node version:', process.version);
-});
+function startServer(server, port, type) {
+  return new Promise((resolve, reject) => {
+    server.on('error', (error) => {
+      if (error.code === 'EACCES') {
+        console.error(`${type} Server Error: Permission denied for port ${port}`);
+        console.error('Try running with sudo or use setcap');
+      } else if (error.code === 'EADDRINUSE') {
+        console.error(`${type} Server Error: Port ${port} is already in use`);
+        console.error('Check if another process is using the port');
+      } else {
+        console.error(`${type} Server Error:`, error);
+      }
+      reject(error);
+    });
 
-if (httpsServer) {
-  httpsServer.listen(httpsPort, () => {
-    console.log(`\nHTTPS server running on port ${httpsPort}`);
-    console.log('TLS version:', process.versions.tls);
-    console.log('OpenSSL version:', process.versions.openssl);
+    server.listen(port, '0.0.0.0', () => {
+      console.log(`\n${type} Server listening on port ${port}`);
+      console.log('Bound to address: 0.0.0.0');
+      console.log('Environment:', process.env.NODE_ENV);
+      resolve();
+    });
   });
 }
 
-// Graceful shutdown
+/**
+ * Start both servers
+ */
+async function startServers() {
+  try {
+    await startServer(httpServer, httpPort, 'HTTP');
+    if (httpsServer) {
+      await startServer(httpsServer, httpsPort, 'HTTPS');
+    }
+    console.log('\nAll servers started successfully');
+  } catch (error) {
+    console.error('Failed to start servers:', error);
+    process.exit(1);
+  }
+}
+
+/**
+ * Initialize servers
+ */
+startServers();
+
+/**
+ * Add process handlers
+ */
 process.on('SIGTERM', () => {
-  console.log('\nReceived SIGTERM signal');
+  console.log('Received SIGTERM signal');
   httpServer.close(() => console.log('HTTP server closed'));
   if (httpsServer) {
     httpsServer.close(() => console.log('HTTPS server closed'));
   }
 });
 
-/**
- * Normalize a port into a number, string, or false.
- */
-function normalizePort(val) {
-  const port = parseInt(val, 10);
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
 
-  if (isNaN(port)) {
-    return val;
-  }
-
-  if (port >= 0) {
-    return port;
-  }
-
-  return false;
-}
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 /**
  * Event listener for HTTP/HTTPS server "error" event.
