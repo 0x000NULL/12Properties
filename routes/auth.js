@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
+const { skip: skipCSRF } = require('../middleware/csrf');
 
 // Redirect from /login to /auth/login
 router.get('/', function(req, res) {
@@ -10,7 +11,7 @@ router.get('/', function(req, res) {
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req, res, next) => {
-  if (req.session.user) {
+  if (req.session && req.session.user) {
     next();
   } else {
     res.redirect('/auth/login');
@@ -28,7 +29,8 @@ router.get('/login', function(req, res, next) {
   res.render('login', { 
     isLoggedIn: !!req.session?.user,
     user: req.session?.user || null,
-    error: req.session.error
+    error: req.session.error,
+    csrfToken: req.csrfToken()
   });
   // Clear any error messages after displaying them
   if (req.session) {
@@ -77,13 +79,13 @@ router.post('/login', validateLogin, async function(req, res, next) {
 });
 
 // Logout handler
-router.post('/logout', function(req, res, next) {
+router.post('/logout', skipCSRF, function(req, res, next) {
   req.session.destroy((err) => {
     if (err) {
-      next(err);
-    } else {
-      res.redirect('/auth/login');
+      console.error('Logout error:', err);
     }
+    // Always redirect to login page
+    res.redirect('/auth/login');
   });
 });
 

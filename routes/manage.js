@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { isAuthenticated } = require('./auth');
+const sessionCheck = require('../middleware/session');
 const Property = require('../models/Property');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
+const { skip: skipCSRF } = require('../middleware/csrf');
 
-// Configure multer for image uploads
+// Configure multer for image uploads with session handling
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/images/properties')
@@ -37,6 +39,9 @@ const upload = multer({
 
 // All manage routes require authentication
 router.use(isAuthenticated);
+
+// Apply session check to all manage routes
+router.use(sessionCheck);
 
 // Main manage dashboard
 router.get('/', async function(req, res, next) {
@@ -177,14 +182,24 @@ router.get('/edit/:id', isAuthenticated, async function(req, res) {
 
 // Handle property update
 router.post('/edit/:id', 
-  isAuthenticated, 
+  isAuthenticated,
   upload.fields([
     { name: 'mainImage', maxCount: 1 },
-    { name: 'images', maxCount: 10 }, // Increased max images
+    { name: 'images', maxCount: 10 },
     { name: 'imageOrder', maxCount: 1 }
   ]),
   async function(req, res, next) {
+    console.log('\nPost-upload middleware ----------------');
+    console.log('CSRF Token in headers:', req.headers['csrf-token']);
+    console.log('Files received:', req.files);
+    console.log('----------------------------------------\n');
+
     try {
+      // Add CSRF token from headers to body
+      if (req.headers['csrf-token']) {
+        req.body._csrf = req.headers['csrf-token'];
+      }
+
       const property = await Property.findById(req.params.id);
       
       // Check permissions
@@ -241,6 +256,15 @@ router.post('/edit/:id',
       res.redirect('/manage');
     } catch (err) {
       console.error('Error updating property:', err);
+      // Check if it's a CSRF error
+      if (err.code === 'EBADCSRFTOKEN') {
+        return res.status(403).render('property-form', {
+          user: req.session.user,
+          property: await Property.findById(req.params.id),
+          isNew: false,
+          error: 'Security token expired. Please try submitting the form again.'
+        });
+      }
       res.render('property-form', {
         user: req.session.user,
         property: req.body,
@@ -250,5 +274,21 @@ router.post('/edit/:id',
     }
   }
 );
+
+// API routes use skipCSRF
+router.delete('/api/properties/:id', skipCSRF, async function(req, res, next) {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    await property.remove();
+    res.json({ message: 'Property deleted' });
+  } catch (err) {
+    console.error('Error deleting property:', err);
+    res.status(500).json({ message: 'Failed to delete property' });
+  }
+});
 
 module.exports = router; 

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= isNew ? 'Add New Property' : 'Edit Property' %> | 12 Properties</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +15,7 @@
             crossorigin="anonymous" 
             referrerpolicy="no-referrer"></script>
     <script src="/javascripts/property-form.js" defer></script>
+    <meta name="csrf-token" content="<%= csrfToken %>" />
   </head>
   <body>
     <!-- Navigation -->
@@ -27,7 +30,8 @@
           <i class="fas fa-user"></i>
           <%= user.name %>
           <form action="/auth/logout" method="POST" class="logout-form">
-            <button type="submit" class="btn-text">Logout</button>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="btn-text" onclick="this.form.submit(); return false;">Logout</button>
           </form>
         </span>
       </div>
@@ -45,8 +49,10 @@
 
         <form action="<%= isNew ? '/manage/new' : `/manage/edit/${property._id}` %>" 
               method="POST" 
+              class="property-form" 
               enctype="multipart/form-data"
-              class="property-form">
+              id="propertyForm">
+          <meta name="csrf-token" content="<%= csrfToken %>" />
           
           <div class="form-grid">
             <div class="form-group">
@@ -186,6 +192,7 @@
 
           <div class="form-actions">
             <form action="/manage" method="GET" style="display: inline;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button type="submit" class="btn-secondary">
                 Cancel
               </button>

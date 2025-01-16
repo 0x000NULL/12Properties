@@ -12,6 +12,9 @@ const expressSanitizer = require('express-sanitizer');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const { protect: csrfProtection } = require('./middleware/csrf');
+const mongoSanitize = require('express-mongo-sanitize');
+const debugCsrf = require('./middleware/debugCsrf');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -19,6 +22,24 @@ const { router: authRouter, isAuthenticated } = require('./routes/auth');
 const manageRouter = require('./routes/manage');
 
 const app = express();
+
+// Session configuration
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  name: '__sid',
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'strict',
+    path: '/',
+    domain: process.env.COOKIE_DOMAIN || undefined
+  },
+  rolling: true,
+  unset: 'destroy'
+};
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -32,6 +53,21 @@ app.use(cookieParser());
 app.use(expressSanitizer());
 app.use(xssClean());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Initialize with in-memory session store first (will be replaced with MongoDB store if connection succeeds)
+app.use(session(sessionConfig));
+
+// Apply CSRF protection after session middleware
+app.use(csrfProtection);
+
+// Add CSRF token to all responses
+app.use((req, res, next) => {
+  if (!req.session) {
+    return next(new Error('Session not available'));
+  }
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 
 // Security middleware
 app.use(helmet({
@@ -51,22 +87,23 @@ app.use(helmet({
         "data:"
       ],
       scriptSrc: [
-        "'self'", 
+        "'self'",
         "'unsafe-inline'",
         "'unsafe-eval'",
-        "https://cdnjs.cloudflare.com",
-        "https://*.cloudflare.com"
-      ],
-      scriptSrcAttr: ["'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "http:"],
-      connectSrc: [
-        "'self'", 
         "https://cdnjs.cloudflare.com"
       ],
-    },
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: []
+    }
   },
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: false
+  crossOriginEmbedderPolicy: { policy: "require-corp" },
+  crossOriginOpenerPolicy: { policy: "same-origin" },
+  crossOriginResourcePolicy: { policy: "same-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 
 // Rate limiting
@@ -76,26 +113,31 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Add more specific rate limiting
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests from this IP',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.use('/auth/login', loginLimiter);
+app.use('/api/', apiLimiter);
+
 // CORS configuration
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3000',
   credentials: true
 }));
-
-// Session configuration with in-memory store for development
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
-  }
-};
-
-// Initialize with in-memory session store
-app.use(session(sessionConfig));
 
 // MongoDB Connection
 async function initializeDatabase() {
@@ -115,7 +157,7 @@ async function initializeDatabase() {
     await mongoose.disconnect();
     
     // Connect to the correct database, using existing one if found
-    let dbName = '12properties';
+    let dbName = '12Properties';
     if (dbExists) {
       // Find the actual name with correct case
       dbName = databases.databases.find(
@@ -128,17 +170,17 @@ async function initializeDatabase() {
     const uri = `mongodb://127.0.0.1:27017/${dbName}`;
     console.log(`Connecting to database: ${dbName}`);
     
-    // Create MongoDB session store
+    // Initialize MongoDB session store with correct database name
     const mongoStore = MongoStore.create({
       mongoUrl: uri,
-      ttl: 24 * 60 * 60 // Session TTL (1 day)
+      ttl: 24 * 60 * 60,
+      touchAfter: 24 * 3600,
+      autoRemove: 'native'
     });
     
-    // Update session middleware with MongoDB store
-    app.use(session({
-      ...sessionConfig,
-      store: mongoStore
-    }));
+    // Replace in-memory session store with MongoDB store
+    app.set('sessionStore', mongoStore);
+    sessionConfig.store = mongoStore;
     
     return mongoose.connect(uri, {
       family: 4
@@ -202,8 +244,10 @@ process.on('SIGINT', async () => {
 // Security Headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   next();
 });
 
@@ -216,6 +260,27 @@ app.use((req, res, next) => {
   ].join(', '));
   next();
 });
+
+// Prevent NoSQL injection
+app.use(mongoSanitize());
+
+// Add additional sanitization
+app.use((req, res, next) => {
+  // Sanitize req.body
+  if (req.body) {
+    Object.keys(req.body).forEach(key => {
+      if (typeof req.body[key] === 'string') {
+        req.body[key] = req.body[key].trim();
+      }
+    });
+  }
+  next();
+});
+
+// Add debug middleware in development
+if (process.env.NODE_ENV !== 'production') {
+  app.use(debugCsrf);
+}
 
 // Routes (moved after all middleware)
 app.use('/', indexRouter);

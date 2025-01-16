@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Get CSRF token from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
   document.querySelectorAll('.delete-form').forEach(form => {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -6,7 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const propertyId = this.dataset.propertyId;
         fetch(`/api/properties/${propertyId}`, {
           method: 'DELETE',
-          credentials: 'same-origin'
+          credentials: 'same-origin',
+          headers: {
+            'CSRF-Token': csrfToken
+          }
         })
         .then(response => {
           if (response.ok) {
