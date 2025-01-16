@@ -606,3 +606,120 @@ footer {
     gap: 1rem;
   }
 }
+
+/* Add these styles to your existing style.css file */
+
+.auth-main {
+  padding: 120px 5% 60px;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.auth-box h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.login-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.btn-login, .btn-logout, .btn-manage {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-login {
+  background: #333;
+  color: white;
+}
+
+.btn-login:hover {
+  background: #555;
+}
+
+.btn-logout {
+  background: #dc3545;
+  color: white;
+  margin-top: 1rem;
+}
+
+.btn-logout:hover {
+  background: #c82333;
+}
+
+.btn-manage {
+  background: #28a745;
+  color: white;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-manage:hover {
+  background: #218838;
+}
+
+.error-message {
+  background: #dc3545;
+  color: white;
+  padding: 0.8rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.user-info {
+  margin-bottom: 1.5rem;
+}
+
+.user-info p {
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.user-info i {
+  margin-right: 0.5rem;
+  width: 20px;
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

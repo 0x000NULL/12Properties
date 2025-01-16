@@ -15,6 +15,7 @@ const MongoStore = require('connect-mongo');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const { router: authRouter, isAuthenticated } = require('./routes/auth');
 
 const app = express();
 
@@ -30,6 +31,11 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.error('MongoDB connection error:', err.message);
   console.log('Please make sure MongoDB is running and accessible');
   // Don't exit the process, let the application continue without DB
+});
+
+// Add this to handle MongoDB errors globally
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
 });
 
 // Security Middleware
@@ -126,6 +132,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/auth', authRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
