@@ -8,6 +8,11 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" 
+            integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDOUF6qgqqszs+iXU4UA==" 
+            crossorigin="anonymous" 
+            referrerpolicy="no-referrer"></script>
+    <script src="/javascripts/property-form.js" defer></script>
   </head>
   <body>
     <!-- Navigation -->
@@ -146,21 +151,37 @@
           </div>
 
           <div class="form-group full-width">
-            <label for="images">Additional Images (up to 5)</label>
+            <label for="images">Additional Images</label>
             <input type="file" 
                    id="images" 
                    name="images"
                    accept="image/*"
                    multiple>
-            <% if (property && property.images && property.images.length > 0) { %>
-              <div class="image-grid">
-                <% property.images.forEach(image => { %>
-                  <div class="current-image">
-                    <img src="<%= image %>" alt="Property image">
-                  </div>
-                <% }) %>
-              </div>
-            <% } %>
+            <div class="image-grid-container">
+              <% if (property && property.images && property.images.length > 0) { %>
+                <div class="image-grid" id="sortable-grid">
+                  <% property.images.forEach((image, index) => { %>
+                    <div class="image-container" data-index="<%= index %>">
+                      <img src="<%= image %>" alt="Property image">
+                      <div class="image-actions">
+                        <button type="button" class="delete-image" title="Delete image">
+                          <i class="fas fa-times"></i>
+                        </button>
+                        <button type="button" class="set-main-image" title="Set as main image">
+                          <i class="fas fa-star"></i>
+                        </button>
+                      </div>
+                      <div class="drag-handle" title="Drag to reorder">
+                        <i class="fas fa-grip-lines"></i>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+            <input type="hidden" name="imageOrder" id="imageOrder">
+            <input type="hidden" name="deleteImages" id="deleteImages">
+            <p class="help-text">Drag images to reorder. Click the X to delete.</p>
           </div>
 
           <div class="form-actions">

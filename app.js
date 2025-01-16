@@ -53,11 +53,16 @@ app.use(helmet({
       scriptSrc: [
         "'self'", 
         "'unsafe-inline'",
-        "'unsafe-eval'"
+        "'unsafe-eval'",
+        "https://cdnjs.cloudflare.com",
+        "https://*.cloudflare.com"
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
-      connectSrc: ["'self'"],
+      connectSrc: [
+        "'self'", 
+        "https://cdnjs.cloudflare.com"
+      ],
     },
   },
   crossOriginEmbedderPolicy: false,
