@@ -1,0 +1,149 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+require('dotenv').config();
+const app = require('../app');
+const debug = require('debug')('12properties:server');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+
+/**
+ * Get port from environment and store in Express.
+ */
+const httpPort = normalizePort(process.env.HTTP_PORT || '3000');
+const httpsPort = normalizePort(process.env.HTTPS_PORT || '3443');
+app.set('port', httpsPort);
+
+/**
+ * Create HTTP and HTTPS servers.
+ */
+const httpServer = http.createServer((req, res) => {
+  // Redirect all HTTP traffic to HTTPS in production
+  if (process.env.NODE_ENV === 'production') {
+    const httpsUrl = `https://${req.headers.host.split(':')[0]}:${httpsPort}${req.url}`;
+    res.writeHead(301, { Location: httpsUrl });
+    res.end();
+  } else {
+    app(req, res);
+  }
+});
+
+let httpsServer;
+if (process.env.NODE_ENV === 'production') {
+  // SSL configuration for HTTPS
+  const httpsOptions = {
+    key: fs.readFileSync(process.env.SSL_KEY_PATH),
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH),
+    // Modern security configurations
+    minVersion: 'TLSv1.2',
+    ciphers: [
+      'ECDHE-ECDSA-AES128-GCM-SHA256',
+      'ECDHE-RSA-AES128-GCM-SHA256',
+      'ECDHE-ECDSA-AES256-GCM-SHA384',
+      'ECDHE-RSA-AES256-GCM-SHA384',
+    ].join(':'),
+    honorCipherOrder: true
+  };
+  httpsServer = https.createServer(httpsOptions, app);
+}
+
+/**
+ * Listen on provided ports, on all network interfaces.
+ */
+httpServer.listen(httpPort);
+httpServer.on('error', onError.bind(null, 'HTTP'));
+httpServer.on('listening', onListening.bind(null, httpServer));
+
+if (process.env.NODE_ENV === 'production' && httpsServer) {
+  httpsServer.listen(httpsPort);
+  httpsServer.on('error', onError.bind(null, 'HTTPS'));
+  httpsServer.on('listening', onListening.bind(null, httpsServer));
+}
+
+// Graceful shutdown handling
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    return val;
+  }
+
+  if (port >= 0) {
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP/HTTPS server "error" event.
+ */
+function onError(serverType, error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const port = serverType === 'HTTP' ? httpPort : httpsPort;
+  const bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP/HTTPS server "listening" event.
+ */
+function onListening(server) {
+  const addr = server.address();
+  const bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+
+/**
+ * Graceful shutdown function
+ */
+function gracefulShutdown() {
+  debug('Received kill signal, shutting down gracefully');
+  
+  httpServer.close(() => {
+    debug('HTTP server closed');
+    if (httpsServer) {
+      httpsServer.close(() => {
+        debug('HTTPS server closed');
+        process.exit(0);
+      });
+    } else {
+      process.exit(0);
+    }
+  });
+
+  // Force shutdown after 30 seconds
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 30000);
+}
