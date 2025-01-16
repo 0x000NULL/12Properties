@@ -156,7 +156,7 @@ async function initializeDatabase() {
     const admin = new User({
       name: 'Sarah Johnson',
       email: 'realtor@12mgt.com',
-      password: 'password123',
+      password: 'P@ssword123!@',
       phone: '+1 (310) 555-0123',
       role: 'admin'
     });
