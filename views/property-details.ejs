@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="/javascripts/fontLoader.js" defer></script>
+    <script src="/javascripts/property-details.js" defer></script>
   </head>
   <body>
     <nav class="main-nav">
@@ -49,6 +50,55 @@
           </div>
         </div>
       </div>
+
+      <% if (property.mainVideo || (property.videos && property.videos.length > 0)) { %>
+        <div class="property-videos">
+          <h2>Property Videos</h2>
+          <div class="video-gallery">
+            <div class="main-video-container">
+              <% if (property.mainVideo) { %>
+                <video class="main-video" controls>
+                  <source src="<%= property.mainVideo.url %>" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+                <h3 class="video-title"><%= property.mainVideo.title || 'Main Property Video' %></h3>
+              <% } else if (property.videos && property.videos.length > 0) { %>
+                <video class="main-video" controls>
+                  <source src="<%= property.videos[0].url %>" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+                <h3 class="video-title"><%= property.videos[0].title || 'Property Video' %></h3>
+              <% } %>
+            </div>
+
+            <% if (property.videos && property.videos.length > 0) { %>
+              <div class="video-thumbnails">
+                <% if (property.mainVideo) { %>
+                  <div class="video-thumbnail active" 
+                       data-video="<%= property.mainVideo.url %>"
+                       data-title="<%= property.mainVideo.title || 'Main Property Video' %>">
+                    <div class="thumbnail-overlay">
+                      <i class="fas fa-play"></i>
+                    </div>
+                    <span>Main Video</span>
+                  </div>
+                <% } %>
+                
+                <% property.videos.forEach((video, index) => { %>
+                  <div class="video-thumbnail <%= !property.mainVideo && index === 0 ? 'active' : '' %>"
+                       data-video="<%= video.url %>"
+                       data-title="<%= video.title || `Property Video ${index + 1}` %>">
+                    <div class="thumbnail-overlay">
+                      <i class="fas fa-play"></i>
+                    </div>
+                    <span><%= video.title || `Video ${index + 1}` %></span>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
 
       <div class="property-content">
         <div class="property-header">
