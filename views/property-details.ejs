@@ -34,7 +34,13 @@
           <div class="main-image" style="background-image: url('<%= property.mainImage %>')">
             <button class="gallery-nav prev-btn"><i class="fas fa-chevron-left"></i></button>
             <button class="gallery-nav next-btn"><i class="fas fa-chevron-right"></i></button>
-            <div class="property-price">$<%= property.price %></div>
+            <div class="property-price">
+              <% if (property.priceInterval === 'monthly') { %>
+                $<%= property.price.toLocaleString() %> per month
+              <% } else { %>
+                $<%= property.price.toLocaleString() %>
+              <% } %>
+            </div>
           </div>
           <div class="thumbnail-grid">
             <% if (property.images && property.images.length > 0) { %>
@@ -108,9 +114,11 @@
             <div class="property-pricing">
               <span class="property-type"><%= property.listingType === 'rental' ? 'For Rent' : 'For Sale' %></span>
               <span class="property-price">
-                <%= property.priceInterval === 'monthly' ? 
-                  `$${property.price.toLocaleString()}/month` : 
-                  `$${property.price.toLocaleString()}` %>
+                <% if (property.priceInterval === 'monthly') { %>
+                  $<%= property.price.toLocaleString() %> per month
+                <% } else { %>
+                  $<%= property.price.toLocaleString() %>
+                <% } %>
               </span>
             </div>
             <span class="property-status"><%= property.status %></span>
