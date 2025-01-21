@@ -1,5 +1,58 @@
 # Changelog
 
+## Video Upload Implementation - 2024-02-12 10:30 UTC (v1.4.2)
+
+### Added Video Upload Support
+#### Property Form Enhancement
+- Added video upload capability for properties
+- Implemented support for multiple video formats (MP4, WebM, MOV, AVI)
+- Added main property video and additional videos support
+- Increased file size limit to 100GB for large video files
+- Added proper video storage directory structure
+
+### Technical Improvements
+#### File Upload Configuration (`routes/manage.js`)
+- Updated multer configuration for video handling
+- Added video-specific file type validation
+- Implemented separate storage paths for videos and images
+- Added proper error handling for video uploads
+- Increased field and file count limits for multiple uploads
+
+#### Model Updates (`models/Property.js`)
+- Added mainVideo and videos fields to Property schema
+- Implemented video metadata storage (URL, thumbnail, duration)
+- Added support for video titles and ordering
+
+#### Directory Structure
+- Added video storage directory (`public/videos/properties`)
+- Updated .gitignore to properly handle uploaded files
+- Added .gitkeep files to maintain directory structure
+- Separated image and video storage paths
+
+### Security Considerations
+- Implemented proper file type validation
+- Added size limits with configurable thresholds
+- Updated Content Security Policy for video content
+- Added proper MIME type handling
+
+### Breaking Changes
+- Changed file storage structure for uploads
+- Modified Property model schema for video support
+- Updated multer configuration for larger files
+
+### Notes
+- Video uploads now supported up to 100GB
+- Separate storage paths for images and videos
+- Maintains directory structure in version control
+- Proper handling of large file uploads
+
+### Future Considerations
+- Add video compression
+- Implement video streaming
+- Add video thumbnail generation
+- Consider CDN integration for video delivery
+- Add video processing queue
+
 ## CSRF Protection and Logout Flow Enhancement - 2024-01-22 10:00 UTC (v1.2.0)
 
 ### Authentication Flow Improvements

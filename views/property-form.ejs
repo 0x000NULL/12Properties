@@ -157,6 +157,27 @@
           </div>
 
           <div class="form-group full-width">
+            <label for="mainVideo">Main Property Video</label>
+            <input type="file" 
+                   id="mainVideo" 
+                   name="mainVideo"
+                   accept="video/mp4,video/x-m4v,video/mov,video/webm,video/avi"
+                   <% if (property && property.mainVideo && property.mainVideo.url) { %>
+                     data-current="<%= property.mainVideo.url %>"
+                   <% } %>>
+            <% if (property && property.mainVideo && property.mainVideo.url) { %>
+              <div class="current-video">
+                <video controls width="320" poster="<%= property.mainVideo.thumbnail %>">
+                  <source src="<%= property.mainVideo.url %>" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+                <p>Current main video</p>
+              </div>
+            <% } %>
+            <p class="help-text">Maximum file size: 100GB. Supported formats: MP4, MOV, WebM, AVI</p>
+          </div>
+
+          <div class="form-group full-width">
             <label for="images">Additional Images</label>
             <input type="file" 
                    id="images" 
@@ -188,6 +209,48 @@
             <input type="hidden" name="imageOrder" id="imageOrder">
             <input type="hidden" name="deleteImages" id="deleteImages">
             <p class="help-text">Drag images to reorder. Click the X to delete.</p>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="videos">Additional Property Videos</label>
+            <input type="file" 
+                   id="videos" 
+                   name="videos"
+                   accept="video/mp4,video/x-m4v,video/mov,video/webm,video/avi"
+                   multiple>
+            <div class="video-grid-container">
+              <% if (property && property.videos && property.videos.length > 0) { %>
+                <div class="video-grid" id="sortable-video-grid">
+                  <% property.videos.forEach((video, index) => { %>
+                    <div class="video-container" data-index="<%= index %>">
+                      <video controls width="320" poster="<%= video.thumbnail %>">
+                        <source src="<%= video.url %>" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                      <input type="text" 
+                             class="video-title" 
+                             name="videoTitles[]" 
+                             value="<%= video.title %>" 
+                             placeholder="Video title">
+                      <div class="video-actions">
+                        <button type="button" class="delete-video" title="Delete video">
+                          <i class="fas fa-times"></i>
+                        </button>
+                        <button type="button" class="set-main-video" title="Set as main video">
+                          <i class="fas fa-star"></i>
+                        </button>
+                      </div>
+                      <div class="drag-handle" title="Drag to reorder">
+                        <i class="fas fa-grip-lines"></i>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+            <input type="hidden" name="videoOrder" id="videoOrder">
+            <input type="hidden" name="deleteVideos" id="deleteVideos">
+            <p class="help-text">Maximum file size: 100GB per video. Drag videos to reorder. Click the X to delete.</p>
           </div>
 
           <div class="form-actions">

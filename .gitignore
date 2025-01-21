@@ -59,3 +59,9 @@ typings/
 
 # next.js build output
 .next
+
+# Uploaded files
+public/images/properties/*
+public/videos/properties/*
+!public/images/properties/.gitkeep
+!public/videos/properties/.gitkeep

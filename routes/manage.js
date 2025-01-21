@@ -7,35 +7,92 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const { skip: skipCSRF } = require('../middleware/csrf');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
+
+// Ensure upload directories exist
+const uploadDirs = ['public/images/properties', 'public/videos/properties'];
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    mkdirp.sync(dir);
+  }
+});
 
 // Configure multer for image uploads with session handling
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/images/properties')
+    // Check if this is a video upload field
+    const dest = (file.fieldname === 'mainVideo' || file.fieldname === 'videos')
+      ? 'public/videos/properties'
+      : 'public/images/properties';
+    
+    console.log(`Storing ${file.fieldname} in ${dest}`);
+    cb(null, dest);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, 'property-' + uniqueSuffix + path.extname(file.originalname))
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+    console.log(`Generated filename: ${filename}`);
+    cb(null, filename);
   }
 });
 
+// Create multer instance with configuration
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 100 * 1024 * 1024 * 1024, // 100GB limit
+    fieldSize: 100 * 1024 * 1024 * 1024, // 100GB field size limit
+    fields: 110,
+    files: 110
   },
   fileFilter: function (req, file, cb) {
-    const allowedTypes = /jpeg|jpg|png|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    console.log('Processing file:', file.originalname, 'fieldname:', file.fieldname);
     
-    if (extname && mimetype) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'));
+    // Check if this is a video upload field
+    if (file.fieldname === 'mainVideo' || file.fieldname === 'videos') {
+      const allowedTypes = /mp4|webm|mov|avi/i;
+      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = file.mimetype.startsWith('video/') || 
+                      path.extname(file.originalname).toLowerCase() === '.avi'; // Special case for AVI
+      
+      if (extname && mimetype) {
+        console.log('Valid video file:', file.originalname);
+        cb(null, true);
+      } else {
+        console.log('Invalid video file:', file.originalname);
+        cb(new Error(`Invalid video file type: ${file.originalname}`));
+      }
+    } 
+    // Check if this is an image upload field
+    else if (file.fieldname === 'mainImage' || file.fieldname === 'images') {
+      const allowedTypes = /jpeg|jpg|png|webp/i;
+      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = file.mimetype.startsWith('image/');
+      
+      if (extname && mimetype) {
+        console.log('Valid image file:', file.originalname);
+        cb(null, true);
+      } else {
+        console.log('Invalid image file:', file.originalname);
+        cb(new Error(`Invalid image file type: ${file.originalname}`));
+      }
+    }
+    // Unknown field type
+    else {
+      cb(new Error(`Unknown field type: ${file.fieldname}`));
     }
   }
 });
+
+// Define upload fields configuration
+const uploadFields = [
+  { name: 'mainImage', maxCount: 1 },
+  { name: 'images', maxCount: 100 },
+  { name: 'mainVideo', maxCount: 1 },
+  { name: 'videos', maxCount: 100 }
+];
 
 // All manage routes require authentication
 router.use(isAuthenticated);
@@ -120,11 +177,22 @@ router.get('/new', isAuthenticated, function(req, res) {
 
 // Create new property
 router.post('/new', 
-  isAuthenticated, 
-  upload.fields([
-    { name: 'mainImage', maxCount: 1 },
-    { name: 'images', maxCount: 5 }
-  ]),
+  isAuthenticated,
+  (req, res, next) => {
+    const uploadMiddleware = upload.fields(uploadFields);
+    uploadMiddleware(req, res, function(err) {
+      if (err) {
+        console.error('Upload error:', err);
+        return res.render('property-form', {
+          user: req.session.user,
+          property: req.body,
+          isNew: true,
+          error: 'File upload failed: ' + err.message
+        });
+      }
+      next();
+    });
+  },
   async function(req, res, next) {
     try {
       const propertyData = {
@@ -183,93 +251,102 @@ router.get('/edit/:id', isAuthenticated, async function(req, res) {
 // Handle property update
 router.post('/edit/:id', 
   isAuthenticated,
-  upload.fields([
-    { name: 'mainImage', maxCount: 1 },
-    { name: 'images', maxCount: 10 },
-    { name: 'imageOrder', maxCount: 1 }
-  ]),
-  async function(req, res, next) {
-    console.log('\nPost-upload middleware ----------------');
-    console.log('CSRF Token in headers:', req.headers['csrf-token']);
+  (req, res, next) => {
+    const uploadMiddleware = upload.fields(uploadFields);
+    uploadMiddleware(req, res, function(err) {
+      if (err instanceof multer.MulterError) {
+        console.error('Multer error:', err);
+        return res.status(400).json({ 
+          error: `File upload error: ${err.message}`,
+          code: err.code
+        });
+      } else if (err) {
+        console.error('Unknown upload error:', err);
+        return res.status(500).json({ 
+          error: err.message || 'File upload failed'
+        });
+      }
+      next();
+    });
+  },
+  async function(req, res) {
+    console.log('Processing edit request');
     console.log('Files received:', req.files);
-    console.log('----------------------------------------\n');
+    console.log('Body:', req.body);
 
     try {
-      // Add CSRF token from headers to body
-      if (req.headers['csrf-token']) {
-        req.body._csrf = req.headers['csrf-token'];
-      }
-
       const property = await Property.findById(req.params.id);
-      
+      if (!property) {
+        return res.status(404).json({ error: 'Property not found' });
+      }
+
       // Check permissions
-      if (!property || 
-          (property.realtor.toString() !== req.session.user._id && 
-           req.session.user.role !== 'admin')) {
-        return res.redirect('/manage');
+      if (property.realtor.toString() !== req.session.user._id && 
+          req.session.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Permission denied' });
       }
 
-      // Update basic info
-      property.title = req.body.title;
-      property.description = req.body.description;
-      property.location = req.body.location;
-      property.price = parseFloat(req.body.price);
-      property.status = req.body.status;
-      property.beds = parseInt(req.body.beds);
-      property.baths = parseFloat(req.body.baths);
-      property.sqft = parseInt(req.body.sqft);
-      property.features = req.body.features.split(',').map(f => f.trim());
+      // Update basic fields
+      Object.assign(property, {
+        title: req.body.title,
+        description: req.body.description,
+        location: req.body.location,
+        price: parseFloat(req.body.price),
+        status: req.body.status,
+        beds: parseInt(req.body.beds),
+        baths: parseFloat(req.body.baths),
+        sqft: parseInt(req.body.sqft),
+        features: req.body.features ? req.body.features.split(',').map(f => f.trim()) : []
+      });
 
-      // Handle main image update
-      if (req.files.mainImage && req.files.mainImage[0]) {
-        property.mainImage = '/images/properties/' + req.files.mainImage[0].filename;
-      } else if (req.body.mainImageUrl) {
-        // If an existing image was selected as main
-        property.mainImage = req.body.mainImageUrl;
-      }
-
-      // Handle additional images
-      if (req.files.images) {
-        const newImages = req.files.images.map(file => '/images/properties/' + file.filename);
+      // Handle file uploads
+      if (req.files) {
+        console.log('Processing uploaded files:', Object.keys(req.files));
         
-        // If imageOrder was provided, use it to arrange images
-        if (req.body.imageOrder) {
-          const orderArray = JSON.parse(req.body.imageOrder);
-          const existingImages = property.images.filter((_, index) => orderArray.includes(index));
-          property.images = [...existingImages, ...newImages];
-        } else {
-          property.images = [...property.images, ...newImages];
+        // Handle main image
+        if (req.files.mainImage && req.files.mainImage[0]) {
+          property.mainImage = '/images/properties/' + req.files.mainImage[0].filename;
+          console.log('Updated main image:', property.mainImage);
         }
-      } else if (req.body.imageOrder) {
-        // Update image order without new uploads
-        const orderArray = JSON.parse(req.body.imageOrder);
-        property.images = orderArray.map(index => property.images[index]);
-      }
 
-      // Handle image deletions
-      if (req.body.deleteImages) {
-        const deleteIndices = JSON.parse(req.body.deleteImages);
-        property.images = property.images.filter((_, index) => !deleteIndices.includes(index));
+        // Handle main video - Note the corrected path
+        if (req.files.mainVideo && req.files.mainVideo[0]) {
+          property.mainVideo = {
+            url: '/videos/properties/' + req.files.mainVideo[0].filename, // Corrected path
+            thumbnail: '',
+            duration: 0
+          };
+          console.log('Updated main video:', property.mainVideo);
+        }
+
+        // Handle additional images
+        if (req.files.images) {
+          const newImages = req.files.images.map(file => '/images/properties/' + file.filename);
+          property.images = [...(property.images || []), ...newImages];
+          console.log('Updated images array:', property.images);
+        }
+
+        // Handle additional videos - Note the corrected path
+        if (req.files.videos) {
+          const newVideos = req.files.videos.map(file => ({
+            url: '/videos/properties/' + file.filename, // Corrected path
+            thumbnail: '',
+            duration: 0,
+            title: ''
+          }));
+          property.videos = [...(property.videos || []), ...newVideos];
+          console.log('Updated videos array:', property.videos);
+        }
       }
 
       await property.save();
-      res.redirect('/manage');
-    } catch (err) {
-      console.error('Error updating property:', err);
-      // Check if it's a CSRF error
-      if (err.code === 'EBADCSRFTOKEN') {
-        return res.status(403).render('property-form', {
-          user: req.session.user,
-          property: await Property.findById(req.params.id),
-          isNew: false,
-          error: 'Security token expired. Please try submitting the form again.'
-        });
-      }
-      res.render('property-form', {
-        user: req.session.user,
-        property: req.body,
-        isNew: false,
-        error: 'Failed to update property. Please try again.'
+      console.log('Property saved successfully');
+      res.json({ success: true, message: 'Property updated successfully' });
+    } catch (error) {
+      console.error('Property update error:', error);
+      res.status(500).json({ 
+        error: 'Failed to update property: ' + error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }

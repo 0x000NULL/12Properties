@@ -48,6 +48,39 @@ const propertySchema = new mongoose.Schema({
   images: [{
     type: String
   }],
+  mainVideo: {
+    url: {
+      type: String,
+      required: false
+    },
+    thumbnail: {
+      type: String,
+      required: false
+    },
+    duration: {
+      type: Number,  // Duration in seconds
+      required: false
+    }
+  },
+  videos: [{
+    url: {
+      type: String,
+      required: true
+    },
+    thumbnail: {
+      type: String,
+      required: false
+    },
+    duration: {
+      type: Number,  // Duration in seconds
+      required: false
+    },
+    title: {
+      type: String,
+      trim: true,
+      required: false
+    }
+  }],
   features: [{
     type: String,
     trim: true

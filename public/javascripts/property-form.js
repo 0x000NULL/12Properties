@@ -157,44 +157,50 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       console.log('Form submission started');
       
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-      console.log('CSRF Token:', csrfToken);
-      
-      if (!csrfToken) {
-        console.error('No CSRF token found');
-        alert('Security token missing. Please refresh the page and try again.');
-        return false;
-      }
-      
-      const formData = new FormData(form);
-      console.log('Form data entries:', [...formData.entries()]);
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
       
       try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        if (!csrfToken) {
+          throw new Error('Security token missing');
+        }
+        
+        const formData = new FormData(form);
+        
+        // Log form data for debugging
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`${key}: ${value.name} (${value.size} bytes)`);
+          } else {
+            console.log(`${key}: ${value}`);
+          }
+        }
+        
         const response = await fetch(form.action, {
           method: 'POST',
           body: formData,
           credentials: 'same-origin',
           headers: {
-            'CSRF-Token': csrfToken,
+            'CSRF-Token': csrfToken
           }
         });
         
         console.log('Response status:', response.status);
         
+        const data = await response.json();
+        console.log('Response data:', data);
+        
         if (response.ok) {
           window.location.href = '/manage';
-        } else if (response.status === 403) {
-          const data = await response.json();
-          console.error('CSRF error:', data);
-          alert(data.error);
-          window.location.reload();
         } else {
-          console.error('Server error:', response.status);
-          alert('Failed to update property. Please try again.');
+          throw new Error(data.error || 'Failed to update property');
         }
       } catch (error) {
-        console.error('Fetch error:', error);
-        alert('Failed to update property. Please try again.');
+        console.error('Upload error:', error);
+        alert(error.message || 'Failed to update property. Please try again.');
+      } finally {
+        submitButton.disabled = false;
       }
     });
   }

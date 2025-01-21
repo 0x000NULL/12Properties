@@ -47,8 +47,8 @@ app.set('view engine', 'ejs');
 
 // Basic middleware setup
 app.use(logger('dev'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(express.json({ limit: '100gb' }));
+app.use(express.urlencoded({ extended: true, limit: '100gb' }));
 app.use(cookieParser());
 app.use(expressSanitizer());
 app.use(xssClean());
@@ -92,12 +92,13 @@ app.use(helmet({
         "'unsafe-eval'",
         "https://cdnjs.cloudflare.com"
       ],
+      scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
+      mediaSrc: ["'self'"],
       connectSrc: ["'self'"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
-      formAction: ["'self'"],
-      upgradeInsecureRequests: []
+      formAction: ["'self'"]
     }
   },
   crossOriginEmbedderPolicy: { policy: "require-corp" },
@@ -138,6 +139,12 @@ app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3000',
   credentials: true
 }));
+
+// Increase timeout
+app.use((req, res, next) => {
+  res.setTimeout(24 * 60 * 60 * 1000); // 24 hour timeout
+  next();
+});
 
 // MongoDB Connection
 async function initializeDatabase() {
