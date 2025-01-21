@@ -1,17 +1,22 @@
 const csrf = require('csurf');
 
 const csrfProtection = csrf({
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  },
+  cookie: false,
   ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+  sessionKey: 'session',
   value: (req) => {
-    if (req.is('multipart/form-data')) {
-      return req.headers['csrf-token'];
+    // Always check query string first for multipart forms
+    const queryToken = req.query._csrf;
+    if (queryToken) {
+      return queryToken;
     }
-    return req.headers['csrf-token'] || req.body._csrf || req.query._csrf;
+
+    // Then check other locations
+    return (
+      req.headers['x-csrf-token'] ||
+      req.headers['csrf-token'] ||
+      (req.body && req.body._csrf)
+    );
   }
 });
 
@@ -22,27 +27,19 @@ const protect = (req, res, next) => {
     return next(new Error('Session not available'));
   }
 
-  console.log('\nCSRF Protection ----------------');
-  console.log('Method:', req.method);
-  console.log('Content-Type:', req.headers['content-type']);
-  console.log('CSRF Token source:', 
-    req.headers['csrf-token'] ? 'headers' : 
-    req.body?._csrf ? 'body' : 
-    req.query._csrf ? 'query' : 'none'
-  );
-  console.log('--------------------------------\n');
+  // Log incoming request details
+  console.log('CSRF Check Details:');
+  console.log('URL:', req.url);
+  console.log('Query:', req.query);
+  console.log('Headers:', req.headers);
+  console.log('Session:', req.session);
 
   csrfProtection(req, res, (err) => {
     if (err) {
       console.error('CSRF Error:', err);
       if (err.code === 'EBADCSRFTOKEN') {
-        console.error('Invalid CSRF token');
-        console.error('Token received:', req.headers['csrf-token'] || req.body?._csrf || req.query._csrf);
-        console.error('Session secret:', req.session.csrfSecret);
-        
         return res.status(403).json({
-          error: 'Security token expired. Please try again.',
-          details: process.env.NODE_ENV === 'development' ? err.message : undefined
+          error: 'Security token expired. Please refresh and try again.'
         });
       }
       return next(err);
@@ -51,11 +48,24 @@ const protect = (req, res, next) => {
   });
 };
 
-const skipCSRF = (req, res, next) => {
+// Debug middleware
+const debugCsrf = (req, res, next) => {
+  console.log('\nCSRF Protection ----------------');
+  console.log('Method:', req.method);
+  console.log('Content-Type:', req.get('Content-Type'));
+  console.log('Session ID:', req.sessionID);
+  console.log('Headers:', req.headers);
+  if (typeof req.csrfToken === 'function') {
+    console.log('CSRF Token:', req.csrfToken());
+  } else {
+    console.log('CSRF Token: Not available');
+  }
+  console.log('--------------------------------\n');
   next();
 };
 
 module.exports = {
   protect,
-  skip: skipCSRF
+  debugCsrf,
+  skip: (req, res, next) => next()
 }; 

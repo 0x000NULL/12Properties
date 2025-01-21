@@ -15,7 +15,6 @@
             crossorigin="anonymous" 
             referrerpolicy="no-referrer"></script>
     <script src="/javascripts/property-form.js" defer></script>
-    <meta name="csrf-token" content="<%= csrfToken %>" />
   </head>
   <body>
     <!-- Navigation -->
@@ -47,12 +46,12 @@
           </div>
         <% } %>
 
-        <form action="<%= isNew ? '/manage/new' : `/manage/edit/${property._id}` %>" 
+        <form id="propertyForm" 
+              action="<%= isNew ? '/manage/new' : '/manage/edit/' + property._id %>" 
               method="POST" 
-              class="property-form" 
               enctype="multipart/form-data"
-              id="propertyForm">
-          <meta name="csrf-token" content="<%= csrfToken %>" />
+              onsubmit="return false;">
+          <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
           
           <div class="form-grid">
             <div class="form-group">
@@ -137,7 +136,7 @@
             <input type="text" 
                    id="features" 
                    name="features"
-                   value="<%= property ? property.features.join(', ') : '' %>"
+                   value="<%= property && property.features ? property.features.join(', ') : '' %>"
                    placeholder="e.g., Pool, Garden, Garage">
           </div>
 
@@ -293,5 +292,13 @@
         <p>&copy; 2024 12 Properties. All rights reserved.</p>
       </div>
     </footer>
+
+    <script>
+    // Add inline script to prevent form submission before JavaScript loads
+    document.getElementById('propertyForm').onsubmit = function(e) {
+      e.preventDefault();
+      return false;
+    };
+    </script>
   </body>
 </html> 

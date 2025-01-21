@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.6] - 2024-01-22 11:29 UTC
+
+### Fixed
+- Fixed CSRF token handling for multipart form data
+- Fixed form submission handling for property creation and editing
+- Added proper initialization of image and video handlers
+- Improved error handling and validation for property form submissions
+- Added better debugging and logging for form submissions
+
+### Changed
+- Reorganized property-form.js code structure
+- Updated form submission to use JSON responses
+- Improved client-side validation and error messages
+- Enhanced image and video upload preview functionality
+
+### Added
+- Added video order tracking
+- Added better form submission prevention before JavaScript loads
+- Added more detailed console logging for debugging
+
 ## Video Playback Implementation - 2024-02-12 11:00 UTC (v1.4.2)
 
 ### Added Video Playback Support
@@ -626,4 +646,3 @@
 - Add realtor availability status
 - Implement direct messaging system
 - Add property viewing scheduler
-

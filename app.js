@@ -12,9 +12,8 @@ const expressSanitizer = require('express-sanitizer');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const { protect: csrfProtection } = require('./middleware/csrf');
 const mongoSanitize = require('express-mongo-sanitize');
-const debugCsrf = require('./middleware/debugCsrf');
+const { protect: csrfProtection, debugCsrf } = require('./middleware/csrf');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -30,15 +29,15 @@ const sessionConfig = {
   saveUninitialized: false,
   name: '__sid',
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'strict',
-    path: '/',
-    domain: process.env.COOKIE_DOMAIN || undefined
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   },
-  rolling: true,
-  unset: 'destroy'
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 24 * 60 * 60 // 24 hours
+  })
 };
 
 // view engine setup
@@ -54,17 +53,17 @@ app.use(expressSanitizer());
 app.use(xssClean());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize with in-memory session store first (will be replaced with MongoDB store if connection succeeds)
+// Initialize session
 app.use(session(sessionConfig));
 
-// Apply CSRF protection after session middleware
+// Apply CSRF protection before trying to access csrfToken
 app.use(csrfProtection);
 
-// Add CSRF token to all responses
+// Debug CSRF (optional)
+app.use(debugCsrf);
+
+// Make CSRF token available to views
 app.use((req, res, next) => {
-  if (!req.session) {
-    return next(new Error('Session not available'));
-  }
   res.locals.csrfToken = req.csrfToken();
   next();
 });
@@ -283,11 +282,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-// Add debug middleware in development
-if (process.env.NODE_ENV !== 'production') {
-  app.use(debugCsrf);
-}
 
 // Routes (moved after all middleware)
 app.use('/', indexRouter);

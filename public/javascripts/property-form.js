@@ -1,101 +1,21 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const imageGrid = document.querySelector('#sortable-grid');
-  const mainImageInput = document.getElementById('mainImage');
+// Define all functions at the top level
+function initializeImageHandlers() {
+  const imageInput = document.querySelector('input[name="images"]');
+  const imageGrid = document.querySelector('.image-grid');
+  const mainImageInput = document.querySelector('input[name="mainImage"]');
   const mainImagePreview = document.querySelector('.current-image img');
-  if (!imageGrid) {
-    console.log('No image grid found');
-    return;
-  }
 
-  // Function to set main image
-  function setMainImage(imageUrl) {
-    // Update the preview
-    if (mainImagePreview) {
-      mainImagePreview.src = imageUrl;
-    }
-    
-    // Create a new hidden input for the main image URL
-    let mainImageUrlInput = document.getElementById('mainImageUrl');
-    if (!mainImageUrlInput) {
-      mainImageUrlInput = document.createElement('input');
-      mainImageUrlInput.type = 'hidden';
-      mainImageUrlInput.id = 'mainImageUrl';
-      mainImageUrlInput.name = 'mainImageUrl';
-      mainImageInput.parentNode.appendChild(mainImageUrlInput);
-    }
-    mainImageUrlInput.value = imageUrl;
-    
-    // Update visual indicators
-    imageGrid.querySelectorAll('.image-container').forEach(container => {
-      container.classList.remove('is-main');
-      if (container.querySelector('img').src === imageUrl) {
-        container.classList.add('is-main');
-      }
+  if (imageInput && imageGrid) {
+    // Initialize sortable
+    new Sortable(imageGrid, {
+      handle: '.drag-handle',
+      animation: 150,
+      onEnd: updateImageOrder
     });
-  }
 
-  // Handle "Set as Main" clicks
-  imageGrid.addEventListener('click', function(e) {
-    const setMainButton = e.target.closest('.set-main-image');
-    if (setMainButton) {
-      e.preventDefault();
-      const container = e.target.closest('.image-container');
-      const imageUrl = container.querySelector('img').src;
-      console.log('Setting main image:', imageUrl);
-      setMainImage(imageUrl);
-    }
-  });
-
-  // Simple Sortable initialization
-  const sortable = new Sortable(imageGrid, {
-    animation: 150,
-    handle: '.drag-handle',
-    draggable: '.image-container',
-    onSort: function() {
-      console.log('Sort happened!');
-      updateImageOrder();
-    }
-  });
-
-  console.log('Sortable initialized with element:', imageGrid);
-
-  function updateImageOrder() {
-    const images = Array.from(imageGrid.querySelectorAll('.image-container:not(.marked-delete)'));
-    const order = images.map(img => img.dataset.index);
-    document.getElementById('imageOrder').value = JSON.stringify(order);
-    
-    const deletedImages = Array.from(document.querySelectorAll('.image-container.marked-delete'))
-      .map(img => parseInt(img.dataset.index));
-    document.getElementById('deleteImages').value = JSON.stringify(deletedImages);
-  }
-
-  // Handle image deletions
-  imageGrid.querySelectorAll('.delete-image').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (confirm('Are you sure you want to delete this image?')) {
-        const imageContainer = this.closest('.image-container');
-        imageContainer.classList.add('marked-delete');
-        imageContainer.style.opacity = '0.5';
-        updateImageOrder();
-      }
-    });
-  });
-
-  // Handle new image uploads
-  const imageInput = document.getElementById('images');
-  if (imageInput) {
+    // Handle image uploads
     imageInput.addEventListener('change', function(e) {
-      const files = Array.from(e.target.files);
-      
-      if (!document.querySelector('.image-grid')) {
-        const grid = document.createElement('div');
-        grid.id = 'sortable-grid';
-        grid.className = 'image-grid';
-        this.parentNode.insertBefore(grid, this.nextSibling);
-        initializeSortable(grid);
-      }
-      
+      const files = Array.from(this.files);
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -134,74 +54,165 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Update preview when main image is selected via file input
-  mainImageInput.addEventListener('change', function(e) {
-    const file = this.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        if (mainImagePreview) {
+  // Update preview when main image is selected
+  if (mainImageInput && mainImagePreview) {
+    mainImageInput.addEventListener('change', function(e) {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
           mainImagePreview.src = e.target.result;
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  // Initialize order on page load
-  updateImageOrder();
-
-  const form = document.getElementById('propertyForm');
-  if (form) {
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      console.log('Form submission started');
-      
-      const submitButton = form.querySelector('button[type="submit"]');
-      submitButton.disabled = true;
-      
-      try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-        if (!csrfToken) {
-          throw new Error('Security token missing');
-        }
-        
-        const formData = new FormData(form);
-        
-        // Log form data for debugging
-        for (let [key, value] of formData.entries()) {
-          if (value instanceof File) {
-            console.log(`${key}: ${value.name} (${value.size} bytes)`);
-          } else {
-            console.log(`${key}: ${value}`);
-          }
-        }
-        
-        const response = await fetch(form.action, {
-          method: 'POST',
-          body: formData,
-          credentials: 'same-origin',
-          headers: {
-            'CSRF-Token': csrfToken
-          }
-        });
-        
-        console.log('Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('Response data:', data);
-        
-        if (response.ok) {
-          window.location.href = '/manage';
-        } else {
-          throw new Error(data.error || 'Failed to update property');
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        alert(error.message || 'Failed to update property. Please try again.');
-      } finally {
-        submitButton.disabled = false;
+        };
+        reader.readAsDataURL(file);
       }
     });
+  }
+}
+
+function initializeVideoHandlers() {
+  const videoInput = document.querySelector('input[name="videos"]');
+  const videoGrid = document.querySelector('.video-grid');
+  
+  if (videoInput && videoGrid) {
+    // Initialize sortable for videos
+    new Sortable(videoGrid, {
+      handle: '.drag-handle',
+      animation: 150,
+      onEnd: updateVideoOrder
+    });
+
+    // Handle video uploads
+    videoInput.addEventListener('change', function(e) {
+      const files = Array.from(this.files);
+      files.forEach(file => {
+        // Create video preview container
+        const container = document.createElement('div');
+        container.className = 'video-container';
+        const nextIndex = videoGrid.querySelectorAll('.video-container').length;
+        container.dataset.index = nextIndex;
+        
+        // Create video element
+        const video = document.createElement('video');
+        video.controls = true;
+        video.width = 320;
+        const source = document.createElement('source');
+        source.src = URL.createObjectURL(file);
+        source.type = file.type;
+        video.appendChild(source);
+        
+        container.appendChild(video);
+        videoGrid.appendChild(container);
+      });
+      updateVideoOrder();
+    });
+  }
+}
+
+function updateImageOrder() {
+  const imageGrid = document.querySelector('.image-grid');
+  const imageOrderInput = document.getElementById('imageOrder');
+  
+  if (imageGrid && imageOrderInput) {
+    const containers = imageGrid.querySelectorAll('.image-container');
+    const order = Array.from(containers).map(container => container.dataset.index);
+    imageOrderInput.value = JSON.stringify(order);
+  }
+}
+
+function updateVideoOrder() {
+  const videoGrid = document.querySelector('.video-grid');
+  const videoOrderInput = document.getElementById('videoOrder');
+  
+  if (videoGrid && videoOrderInput) {
+    const containers = videoGrid.querySelectorAll('.video-container');
+    const order = Array.from(containers).map(container => container.dataset.index);
+    videoOrderInput.value = JSON.stringify(order);
+  }
+}
+
+async function handleFormSubmit(e) {
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  
+  try {
+    // Validate required fields
+    const requiredFields = form.querySelectorAll('[required]');
+    let missingFields = [];
+    
+    requiredFields.forEach(field => {
+      if (!field.value) {
+        missingFields.push(field.labels[0]?.textContent || field.name);
+      }
+    });
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+    }
+    
+    const formData = new FormData(form);
+    const csrfToken = formData.get('_csrf');
+    
+    if (!csrfToken) {
+      throw new Error('Security token missing');
+    }
+    
+    // Add CSRF token to URL
+    const url = new URL(form.action, window.location.origin);
+    url.searchParams.set('_csrf', csrfToken);
+    
+    console.log('Submitting to URL:', url.toString());
+    console.log('Form data entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? value.name : value}`);
+    }
+    
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to save property');
+    }
+    
+    const data = await response.json();
+    window.location.href = data.redirect || '/manage';
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert(error.message || 'Failed to save property. Please try again.');
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+// Initialize everything when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('propertyForm');
+  if (form) {
+    console.log('Initializing property form handler');
+    
+    // Remove any existing onsubmit handler
+    form.removeAttribute('onsubmit');
+    
+    // Prevent form from submitting normally
+    form.addEventListener('submit', function(e) {
+      console.log('Form submit intercepted');
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormSubmit(e);
+    });
+
+    // Initialize other handlers
+    initializeImageHandlers();
+    initializeVideoHandlers();
+    updateImageOrder();
+    updateVideoOrder();
   }
 }); 

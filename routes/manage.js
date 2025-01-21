@@ -169,57 +169,106 @@ router.get('/update-ownership', async function(req, res, next) {
 // Show new property form
 router.get('/new', isAuthenticated, function(req, res) {
   res.render('property-form', {
+    title: 'Add New Property',
+    property: {
+      title: '',
+      description: '',
+      location: '',
+      price: '',
+      status: 'Active',
+      beds: '',
+      baths: '',
+      sqft: '',
+      features: [], // Initialize empty features array
+      mainImage: '',
+      images: [],
+      mainVideo: null,
+      videos: []
+    },
+    isNew: true,
     user: req.session.user,
-    property: null,
-    isNew: true
+    csrfToken: req.csrfToken()
   });
 });
 
 // Create new property
 router.post('/new', 
   isAuthenticated,
+  // Apply CSRF protection before multer
+  (req, res, next) => {
+    // Extract CSRF token from query string
+    if (!req.query._csrf) {
+      return res.status(403).json({ error: 'CSRF token missing' });
+    }
+    next();
+  },
   (req, res, next) => {
     const uploadMiddleware = upload.fields(uploadFields);
     uploadMiddleware(req, res, function(err) {
       if (err) {
         console.error('Upload error:', err);
-        return res.render('property-form', {
-          user: req.session.user,
-          property: req.body,
-          isNew: true,
-          error: 'File upload failed: ' + err.message
+        return res.status(400).json({ 
+          error: err.message || 'File upload failed'
         });
       }
       next();
     });
   },
-  async function(req, res, next) {
+  async function(req, res) {
     try {
-      const propertyData = {
+      console.log('Creating new property');
+      console.log('Files received:', req.files);
+      console.log('Body:', req.body);
+
+      // Create new property
+      const property = new Property({
         ...req.body,
         realtor: req.session.user._id,
         price: parseFloat(req.body.price),
         beds: parseInt(req.body.beds),
         baths: parseFloat(req.body.baths),
         sqft: parseInt(req.body.sqft),
-        features: req.body.features.split(',').map(f => f.trim()),
-        mainImage: '/images/properties/' + req.files.mainImage[0].filename,
-        images: req.files.images ? 
-          req.files.images.map(file => '/images/properties/' + file.filename) : 
-          []
-      };
+        features: req.body.features ? req.body.features.split(',').map(f => f.trim()) : []
+      });
 
-      const property = new Property(propertyData);
+      // Handle file uploads
+      if (req.files) {
+        if (req.files.mainImage && req.files.mainImage[0]) {
+          property.mainImage = '/images/properties/' + req.files.mainImage[0].filename;
+        }
+        if (req.files.mainVideo && req.files.mainVideo[0]) {
+          property.mainVideo = {
+            url: '/videos/properties/' + req.files.mainVideo[0].filename,
+            thumbnail: '',
+            duration: 0
+          };
+        }
+        if (req.files.images) {
+          property.images = req.files.images.map(file => '/images/properties/' + file.filename);
+        }
+        if (req.files.videos) {
+          property.videos = req.files.videos.map(file => ({
+            url: '/videos/properties/' + file.filename,
+            thumbnail: '',
+            duration: 0,
+            title: ''
+          }));
+        }
+      }
+
       await property.save();
-
-      res.redirect('/manage');
-    } catch (err) {
-      console.error('Error creating property:', err);
-      res.render('property-form', {
-        user: req.session.user,
-        property: req.body,
-        isNew: true,
-        error: 'Failed to create property. Please try again.'
+      console.log('Property saved successfully');
+      
+      // Always return JSON response
+      res.json({ 
+        success: true, 
+        redirect: '/manage',
+        message: 'Property created successfully' 
+      });
+    } catch (error) {
+      console.error('Error creating property:', error);
+      res.status(500).json({ 
+        error: 'Failed to create property: ' + error.message 
       });
     }
   }
@@ -229,22 +278,19 @@ router.post('/new',
 router.get('/edit/:id', isAuthenticated, async function(req, res) {
   try {
     const property = await Property.findById(req.params.id);
-    
-    // Check if property exists and user has permission
-    if (!property || 
-        (property.realtor.toString() !== req.session.user._id && 
-         req.session.user.role !== 'admin')) {
-      return res.redirect('/manage');
+    if (!property) {
+      return res.status(404).render('error', { message: 'Property not found' });
     }
-
+    
     res.render('property-form', {
-      user: req.session.user,
+      title: 'Edit Property',
       property: property,
-      isNew: false
+      isNew: false,
+      user: req.session.user,
+      csrfToken: req.csrfToken()
     });
   } catch (err) {
-    console.error('Error loading property:', err);
-    res.redirect('/manage');
+    next(err);
   }
 });
 
