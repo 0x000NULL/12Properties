@@ -103,7 +103,18 @@
       <div class="property-content">
         <div class="property-header">
           <h1><%= property.title %></h1>
-          <p class="location"><i class="fas fa-map-marker-alt"></i> <%= property.location %></p>
+          <div class="property-meta">
+            <span class="property-location"><i class="fas fa-map-marker-alt"></i> <%= property.location %></span>
+            <div class="property-pricing">
+              <span class="property-type"><%= property.listingType === 'rental' ? 'For Rent' : 'For Sale' %></span>
+              <span class="property-price">
+                <%= property.priceInterval === 'monthly' ? 
+                  `$${property.price.toLocaleString()}/month` : 
+                  `$${property.price.toLocaleString()}` %>
+              </span>
+            </div>
+            <span class="property-status"><%= property.status %></span>
+          </div>
         </div>
 
         <div class="property-stats">

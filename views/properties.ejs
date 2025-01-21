@@ -67,7 +67,14 @@
             <div class="property-image-container">
               <img src="<%= property.mainImage %>" alt="<%= property.title %>" class="property-image">
               <div class="property-status"><%= property.status %></div>
-              <div class="property-price">$<%= property.price %></div>
+              <div class="property-info">
+                <span class="property-type"><%= property.listingType === 'rental' ? 'For Rent' : 'For Sale' %></span>
+                <span class="property-price">
+                  <%= property.priceInterval === 'monthly' ? 
+                    `$${property.price.toLocaleString()}/month` : 
+                    `$${property.price.toLocaleString()}` %>
+                </span>
+              </div>
             </div>
             <div class="property-info">
               <h3><%= property.title %></h3>

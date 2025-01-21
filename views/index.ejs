@@ -52,7 +52,14 @@
         <% properties.forEach(property => { %>
           <div class="property-card">
             <div class="property-image" style="background-image: url('<%= property.mainImage %>');">
-              <div class="property-price">$<%= property.price.toLocaleString() %></div>
+              <div class="property-info">
+                <span class="property-type"><%= property.listingType === 'rental' ? 'For Rent' : 'For Sale' %></span>
+                <span class="property-price">
+                  <%= property.priceInterval === 'monthly' ? 
+                    `$${property.price.toLocaleString()}/month` : 
+                    `$${property.price.toLocaleString()}` %>
+                </span>
+              </div>
             </div>
             <div class="property-info">
               <h3><%= property.title %></h3>

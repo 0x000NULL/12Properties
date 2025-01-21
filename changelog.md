@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.10] - 2024-01-22 12:45 UTC
+
+### Fixed
+- Fixed overlapping dropdown menus in property form
+- Fixed z-index issues with price interval selector
+- Improved form layout and spacing for price inputs
+
+### Changed
+- Enhanced price input group styling
+- Updated form group select z-index handling
+- Improved flexbox layout for price inputs
+
+### Technical
+- Added proper z-index stacking context
+- Implemented flexbox improvements for form elements
+- Added min-width constraints to prevent layout issues
+
 ## [1.4.6] - 2024-01-22 11:29 UTC
 
 ### Fixed
@@ -646,3 +663,23 @@
 - Add realtor availability status
 - Implement direct messaging system
 - Add property viewing scheduler
+
+## [1.4.7] - 2024-01-22 12:00 UTC
+
+### Added
+- Support for rental properties with monthly pricing
+- New listing type selector (sale/rental)
+- Price interval options (total/monthly)
+- Automatic price formatting based on listing type
+- Visual indicators for rental vs sale properties
+
+### Changed
+- Updated Property model schema to support rental listings
+- Enhanced price display formatting across all views
+- Modified property form to handle rental-specific fields
+- Improved property card layout to show listing type
+
+### Technical
+- Added virtual getter for formatted price display
+- Enhanced form validation for rental properties
+- Updated database schema with new listing fields

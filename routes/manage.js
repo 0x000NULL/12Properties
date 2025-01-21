@@ -342,7 +342,9 @@ router.post('/edit/:id',
         beds: parseInt(req.body.beds),
         baths: parseFloat(req.body.baths),
         sqft: parseInt(req.body.sqft),
-        features: req.body.features ? req.body.features.split(',').map(f => f.trim()) : []
+        features: req.body.features ? req.body.features.split(',').map(f => f.trim()) : [],
+        listingType: req.body.listingType,
+        priceInterval: req.body.priceInterval
       });
 
       // Handle file uploads

@@ -214,5 +214,18 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeVideoHandlers();
     updateImageOrder();
     updateVideoOrder();
+
+    const listingTypeSelect = document.getElementById('listingType');
+    const priceIntervalSelect = document.getElementById('priceInterval');
+    
+    if (listingTypeSelect && priceIntervalSelect) {
+      listingTypeSelect.addEventListener('change', function() {
+        if (this.value === 'rental') {
+          priceIntervalSelect.value = 'monthly';
+        } else {
+          priceIntervalSelect.value = 'total';
+        }
+      });
+    }
   }
 }); 

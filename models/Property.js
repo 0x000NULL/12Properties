@@ -18,8 +18,13 @@ const propertySchema = new mongoose.Schema({
   },
   price: {
     type: Number,
+    required: true
+  },
+  priceInterval: {
+    type: String,
+    enum: ['total', 'monthly'],
     required: true,
-    min: 0
+    default: 'total'
   },
   status: {
     type: String,
@@ -105,6 +110,12 @@ const propertySchema = new mongoose.Schema({
   lastModified: {
     type: Date,
     default: Date.now
+  },
+  listingType: {
+    type: String,
+    enum: ['sale', 'rental'],
+    required: true,
+    default: 'sale'
   }
 }, {
   collection: 'properties'
@@ -114,6 +125,19 @@ const propertySchema = new mongoose.Schema({
 propertySchema.pre('save', function(next) {
   this.lastModified = new Date();
   next();
+});
+
+// Add a virtual getter for formatted price
+propertySchema.virtual('formattedPrice').get(function() {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  const price = formatter.format(this.price);
+  return this.priceInterval === 'monthly' ? `${price}/month` : price;
 });
 
 module.exports = mongoose.model('Property', propertySchema); 
