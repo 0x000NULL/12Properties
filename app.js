@@ -166,8 +166,9 @@ async function initializeDatabase() {
     return mongoose.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      ssl: true,
-      sslValidate: true,
+      tls: true,
+      tlsInsecure: false,
+      retryWrites: false
     });
   } catch (err) {
     console.error('Database initialization error:', err.message);
