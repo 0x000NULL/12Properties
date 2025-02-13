@@ -148,35 +148,10 @@ app.use((req, res, next) => {
 // MongoDB Connection
 async function initializeDatabase() {
   try {
-    // First, check if database already exists with any case
-    const adminClient = await mongoose.connect('mongodb://127.0.0.1:27017/admin', {
-      family: 4
-    });
+    // Connect directly to the database using the full connection string
+    const uri = process.env.MONGODB_URI;
     
-    const adminDb = adminClient.connection.db;
-    const databases = await adminDb.admin().listDatabases();
-    const dbExists = databases.databases.some(
-      db => db.name.toLowerCase() === '12properties'
-    );
-    
-    // Disconnect from admin database
-    await mongoose.disconnect();
-    
-    // Connect to the correct database, using existing one if found
-    let dbName = '12Properties';
-    if (dbExists) {
-      // Find the actual name with correct case
-      dbName = databases.databases.find(
-        db => db.name.toLowerCase() === '12properties'
-      ).name;
-      console.log(`Found existing database: ${dbName}`);
-    }
-    
-    // Update the connection URI with the correct database name
-    const uri = `mongodb://127.0.0.1:27017/${dbName}`;
-    console.log(`Connecting to database: ${dbName}`);
-    
-    // Initialize MongoDB session store with correct database name
+    // Initialize MongoDB session store
     const mongoStore = MongoStore.create({
       mongoUrl: uri,
       ttl: 24 * 60 * 60,
@@ -189,19 +164,13 @@ async function initializeDatabase() {
     sessionConfig.store = mongoStore;
     
     return mongoose.connect(uri, {
-      family: 4
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      ssl: true,
+      sslValidate: true,
     });
   } catch (err) {
     console.error('Database initialization error:', err.message);
-    if (err.code === 13297) {
-      console.log('\nDatabase case sensitivity issue detected.');
-      console.log('Please follow these steps to resolve:');
-      console.log('1. Open MongoDB shell: mongosh');
-      console.log('2. Switch to the database: use 12Properties');
-      console.log('3. Drop the database: db.dropDatabase()');
-      console.log('4. Exit MongoDB shell: exit');
-      console.log('5. Restart the application\n');
-    }
     throw err;
   }
 }
