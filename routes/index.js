@@ -147,13 +147,16 @@ router.post('/contact', csrfProtection, async function(req, res, next) {
   } catch (error) {
     console.error('Contact form error:', error);
     
-    // Redirect back with error message
+    const properties = await Property.find({ status: 'Active' })
+      .sort({ createdAt: -1 })
+      .limit(6);
+    
     res.render('index', {
       title: 'Luxury Estates | Premium Properties',
-      properties: await Property.find({ status: 'Active' }).sort({ createdAt: -1 }).limit(6),
+      properties: properties,
       user: req.session.user || null,
       csrfToken: req.csrfToken(),
-      contactError: 'Sorry, there was an error sending your message. Please try again later.'
+      contactError: error.message || 'Sorry, there was an error sending your message. Please try again.'
     });
   }
 });

@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const mongoSanitize = require('express-mongo-sanitize');
-const { protect: csrfProtection, debugCsrf } = require('./middleware/csrf');
+const { protect: csrfProtection } = require('./middleware/csrf');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -24,7 +24,7 @@ const app = express();
 
 // Session configuration
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   name: '__sid',
@@ -33,11 +33,7 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  },
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    ttl: 24 * 60 * 60 // 24 hours
-  })
+  }
 };
 
 // view engine setup
@@ -56,11 +52,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Initialize session
 app.use(session(sessionConfig));
 
-// Apply CSRF protection before trying to access csrfToken
+// Apply CSRF protection after session initialization
 app.use(csrfProtection);
-
-// Debug CSRF (optional)
-app.use(debugCsrf);
 
 // Make CSRF token available to views
 app.use((req, res, next) => {

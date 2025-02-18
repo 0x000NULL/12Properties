@@ -1,45 +1,42 @@
 const csrf = require('csurf');
 
 const csrfProtection = csrf({
-  cookie: false,
+  cookie: true,
   ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
-  sessionKey: 'session',
   value: (req) => {
-    // Always check query string first for multipart forms
-    const queryToken = req.query._csrf;
-    if (queryToken) {
-      return queryToken;
-    }
-
-    // Then check other locations
     return (
-      req.headers['x-csrf-token'] ||
+      req.body._csrf ||
+      req.query._csrf ||
       req.headers['csrf-token'] ||
-      (req.body && req.body._csrf)
+      req.headers['x-csrf-token']
     );
   }
 });
 
 // Wrap CSRF protection with better error handling
 const protect = (req, res, next) => {
-  if (!req.session) {
-    console.error('No session available');
-    return next(new Error('Session not available'));
-  }
-
-  // Log incoming request details
-  console.log('CSRF Check Details:');
-  console.log('URL:', req.url);
-  console.log('Query:', req.query);
-  console.log('Headers:', req.headers);
-  console.log('Session:', req.session);
-
   csrfProtection(req, res, (err) => {
     if (err) {
-      console.error('CSRF Error:', err);
       if (err.code === 'EBADCSRFTOKEN') {
-        return res.status(403).json({
-          error: 'Security token expired. Please refresh and try again.'
+        console.error('CSRF Error:', {
+          url: req.url,
+          method: req.method,
+          token: req.body._csrf,
+          headers: req.headers
+        });
+        
+        // For GET requests, continue with new token
+        if (req.method === 'GET') {
+          return next();
+        }
+        
+        // For POST requests, return to form with error
+        return res.status(403).render('index', {
+          title: 'Luxury Estates | Premium Properties',
+          properties: [],
+          user: req.session.user || null,
+          csrfToken: req.csrfToken(),
+          contactError: 'Form submission failed. Please try again.'
         });
       }
       return next(err);
