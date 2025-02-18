@@ -1,9 +1,15 @@
 var express = require('express');
 var router = express.Router();
 const Property = require('../models/Property');
+const User = require('../models/User');
+const transporter = require('../config/mailer');
+const csrf = require('csurf');
+
+// Add CSRF protection
+const csrfProtection = csrf({ cookie: true });
 
 /* GET home page. */
-router.get('/', async function(req, res, next) {
+router.get('/', csrfProtection, async function(req, res, next) {
   try {
     const properties = await Property.find({ status: 'Active' })
       .sort({ createdAt: -1 })
@@ -12,7 +18,8 @@ router.get('/', async function(req, res, next) {
     res.render('index', { 
       title: 'Luxury Estates | Premium Properties',
       properties: properties,
-      user: req.session.user || null
+      user: req.session.user || null,
+      csrfToken: req.csrfToken()
     });
   } catch (err) {
     next(err);
@@ -91,6 +98,63 @@ router.get('/property/:id', async function(req, res, next) {
     res.render('property-details', { property: formattedProperty });
   } catch (error) {
     next(error);
+  }
+});
+
+/* POST contact form */
+router.post('/contact', csrfProtection, async function(req, res, next) {
+  try {
+    const { name, email, phone, message } = req.body;
+
+    // Get all admin and realtor users
+    const users = await User.find({
+      role: { $in: ['admin', 'realtor'] }
+    }, 'email');
+
+    if (!users.length) {
+      throw new Error('No recipients found');
+    }
+
+    const recipientEmails = users.map(user => user.email);
+
+    // Prepare email content
+    const mailOptions = {
+      from: `"12 Properties Website" <${process.env.SMTP_FROM}>`,
+      to: recipientEmails.join(', '),
+      subject: 'New Contact Form Submission',
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    // Redirect back with success message
+    res.render('index', {
+      title: 'Luxury Estates | Premium Properties',
+      properties: await Property.find({ status: 'Active' }).sort({ createdAt: -1 }).limit(6),
+      user: req.session.user || null,
+      csrfToken: req.csrfToken(),
+      contactSuccess: true
+    });
+
+  } catch (error) {
+    console.error('Contact form error:', error);
+    
+    // Redirect back with error message
+    res.render('index', {
+      title: 'Luxury Estates | Premium Properties',
+      properties: await Property.find({ status: 'Active' }).sort({ createdAt: -1 }).limit(6),
+      user: req.session.user || null,
+      csrfToken: req.csrfToken(),
+      contactError: 'Sorry, there was an error sending your message. Please try again later.'
+    });
   }
 });
 
