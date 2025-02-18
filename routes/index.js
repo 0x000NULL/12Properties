@@ -29,6 +29,11 @@ async function getFeaturedProperties() {
   return properties;
 }
 
+// Add this function if you need to clear the cache
+function clearPropertiesCache() {
+  cache.del('featured_properties');
+}
+
 /* GET home page. */
 router.get('/', csrfProtection, async function(req, res, next) {
   try {
