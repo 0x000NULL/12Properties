@@ -140,4 +140,7 @@ propertySchema.virtual('formattedPrice').get(function() {
   return this.priceInterval === 'monthly' ? `${price}/month` : price;
 });
 
+// Add compound index for status and createdAt
+propertySchema.index({ status: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Property', propertySchema); 
