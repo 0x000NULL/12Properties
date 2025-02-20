@@ -141,7 +141,6 @@ app.use((req, res, next) => {
 // MongoDB Connection
 async function initializeDatabase() {
   try {
-    // Connect directly to the database using the full connection string
     const uri = process.env.MONGODB_URI;
     
     // Initialize MongoDB session store
@@ -149,40 +148,72 @@ async function initializeDatabase() {
       mongoUrl: uri,
       ttl: 24 * 60 * 60,
       touchAfter: 24 * 3600,
-      autoRemove: 'native'
+      autoRemove: 'native',
+      // Add retry options for the store
+      clientPromise: mongoose.connect(uri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000, // Reduce timeout to fail fast
+        socketTimeoutMS: 45000, // How long to wait for operations
+        family: 4, // Force IPv4
+        maxPoolSize: 10,
+        retryWrites: true,
+        retryReads: true,
+        // Remove TLS options for local development
+        tls: process.env.NODE_ENV === 'production',
+        tlsInsecure: false
+      }).then(() => mongoose.connection.getClient())
     });
     
     // Replace in-memory session store with MongoDB store
     app.set('sessionStore', mongoStore);
     sessionConfig.store = mongoStore;
     
-    return mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      tls: true,
-      tlsInsecure: false,
-      retryWrites: false
+    // Add connection event handlers
+    mongoose.connection.on('connected', () => {
+      console.log('Mongoose connected to MongoDB');
     });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('Mongoose disconnected from MongoDB');
+    });
+
+    // Return the connection promise
+    return mongoose.connection;
   } catch (err) {
     console.error('Database initialization error:', err.message);
     throw err;
   }
 }
 
-// Initialize database connection
-initializeDatabase()
-  .then(() => {
+// Initialize database connection with retries
+const MAX_RETRIES = 5;
+const RETRY_INTERVAL = 5000; // 5 seconds
+
+async function connectWithRetry(retryCount = 0) {
+  try {
+    await initializeDatabase();
     console.log('Connected to MongoDB successfully');
-  })
-  .catch(err => {
-    console.error('Failed to initialize database');
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Critical database error in production - shutting down');
-      process.exit(1);
+  } catch (err) {
+    console.error(`Failed to connect to MongoDB (attempt ${retryCount + 1}/${MAX_RETRIES}):`, err.message);
+    
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Retrying in ${RETRY_INTERVAL/1000} seconds...`);
+      setTimeout(() => connectWithRetry(retryCount + 1), RETRY_INTERVAL);
     } else {
-      console.log('Development mode - using in-memory session store');
+      console.error('Max retry attempts reached. Could not connect to MongoDB.');
+      if (process.env.NODE_ENV === 'production') {
+        console.error('Critical database error in production - shutting down');
+        process.exit(1);
+      } else {
+        console.log('Development mode - continuing with in-memory session store');
+      }
     }
-  });
+  }
+}
+
+// Start the connection process
+connectWithRetry();
 
 // Add this to handle MongoDB errors globally
 mongoose.connection.on('error', err => {

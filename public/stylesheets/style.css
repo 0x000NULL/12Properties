@@ -153,12 +153,15 @@ body {
 
 .property-price {
   position: absolute;
-  right: 1rem;
-  top: 1rem;
-  background: rgba(255,255,255,0.9);
-  padding: 0.5rem 1rem;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
   border-radius: 4px;
-  font-weight: bold;
+  display: inline-block;
+  width: auto;
+  max-width: 90%;
 }
 
 .property-info {
@@ -513,76 +516,73 @@ footer {
 }
 
 .property-gallery {
-  margin-bottom: 3rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .gallery-container {
-  position: relative;
+  width: 100%;
 }
 
 .main-image {
-  height: 500px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 8px;
   position: relative;
-  margin-bottom: 1rem;
-  transition: background-image 0.3s ease-in-out;
+  width: 100%;
+  padding-top: 66.67%; /* 3:2 aspect ratio */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #f5f5f5;
 }
 
 .gallery-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
   border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  padding: 1rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
   z-index: 2;
 }
 
-.gallery-nav:hover {
-  background: white;
-}
-
 .prev-btn {
-  left: 1rem;
+  left: 0;
 }
 
 .next-btn {
-  right: 1rem;
+  right: 0;
+}
+
+.property-price {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
 }
 
 .thumbnail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .thumbnail {
-  height: 80px;
+  padding-top: 66.67%; /* Same aspect ratio as main image */
   background-size: cover;
   background-position: center;
-  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
   border: 2px solid transparent;
-}
-
-.thumbnail:hover {
-  opacity: 0.8;
+  transition: border-color 0.3s ease;
 }
 
 .thumbnail.active {
-  border-color: #333;
-  opacity: 1;
+  border-color: #007bff;
 }
 
 .property-header {
@@ -1542,7 +1542,7 @@ th {
 .property-pricing .property-price {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color: white;
 }
 
 .property-pricing .property-type {
