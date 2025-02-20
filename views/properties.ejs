@@ -15,6 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="/javascripts/fontLoader.js" defer></script>
+    <script src="/javascripts/contact-agent.js" defer></script>
+    <meta name="csrf-token" content="<%= csrfToken %>">
   </head>
   <body>
     <nav class="main-nav">
@@ -89,7 +91,12 @@
               </p>
               <div class="property-actions">
                 <a href="/property/<%= property._id %>" class="btn-view">View Details</a>
-                <button class="btn-contact">Contact Agent</button>
+                <button 
+                  class="btn-contact" 
+                  onclick="showContactModal('<%= property._id %>', '<%= property.title.replace(/'/g, "\\'") %>')"
+                >
+                  Contact Agent
+                </button>
               </div>
             </div>
           </div>

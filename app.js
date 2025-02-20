@@ -20,6 +20,7 @@ const usersRouter = require('./routes/users');
 const { router: authRouter, isAuthenticated } = require('./routes/auth');
 const manageRouter = require('./routes/manage');
 const notificationsRouter = require('./routes/notifications');
+const contactRouter = require('./routes/contact');
 
 const app = express();
 
@@ -284,6 +285,7 @@ app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/manage', manageRouter);
 app.use('/api', notificationsRouter);
+app.use('/api', contactRouter);
 
 // Redirect /login to /auth/login
 app.get('/login', (req, res) => {
