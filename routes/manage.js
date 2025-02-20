@@ -4,6 +4,7 @@ const { isAuthenticated } = require('./auth');
 const sessionCheck = require('../middleware/session');
 const Property = require('../models/Property');
 const PropertyNotification = require('../models/PropertyNotification');
+const NotificationService = require('../services/notificationService');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
@@ -260,6 +261,19 @@ router.post('/new',
       await property.save();
       console.log('Property saved successfully');
       
+      // If the property is active (not coming soon), notify subscribers
+      if (property.status === 'Active') {
+        // Send notifications asynchronously
+        setImmediate(async () => {
+          try {
+            const result = await NotificationService.notifySubscribersOfNewProperty(property);
+            console.log('Notification result:', result);
+          } catch (error) {
+            console.error('Failed to send notifications:', error);
+          }
+        });
+      }
+
       // Always return JSON response
       res.json({ 
         success: true, 
