@@ -3,6 +3,7 @@ const router = express.Router();
 const { isAuthenticated } = require('./auth');
 const sessionCheck = require('../middleware/session');
 const Property = require('../models/Property');
+const PropertyNotification = require('../models/PropertyNotification');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
@@ -413,6 +414,46 @@ router.delete('/api/properties/:id', skipCSRF, async function(req, res, next) {
   } catch (err) {
     console.error('Error deleting property:', err);
     res.status(500).json({ message: 'Failed to delete property' });
+  }
+});
+
+// Get notifications list
+router.get('/notifications', isAuthenticated, async function(req, res) {
+  try {
+    let notifications;
+    
+    if (req.session.user.role === 'admin') {
+      // Admin sees all notifications
+      notifications = await PropertyNotification.find()
+        .populate('propertyId', 'title location')
+        .sort({ createdAt: -1 });
+    } else {
+      // Realtors see notifications for their properties
+      const userProperties = await Property.find({ realtor: req.session.user._id });
+      const propertyIds = userProperties.map(p => p._id);
+      
+      notifications = await PropertyNotification.find({
+        $or: [
+          { propertyId: { $in: propertyIds } },
+          { type: 'general' }
+        ]
+      })
+        .populate('propertyId', 'title location')
+        .sort({ createdAt: -1 });
+    }
+    
+    res.render('notifications', {
+      title: 'Property Notifications',
+      notifications,
+      user: req.session.user,
+      csrfToken: req.csrfToken()
+    });
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    res.status(500).render('error', { 
+      message: 'Failed to load notifications',
+      error: err 
+    });
   }
 });
 

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %> | 12 Properties</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Load Stylesheets -->
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="logo">12 Properties</div>
+      <div class="nav-links">
+        <a href="/manage">Dashboard</a>
+        <a href="/">Home</a>
+        <span class="user-menu">
+          <i class="fas fa-user"></i>
+          <%= user.name %>
+          <form action="/auth/logout" method="POST" class="logout-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="btn-text">Logout</button>
+          </form>
+        </span>
+      </div>
+    </nav>
+
+    <main class="manage-main">
+      <div class="manage-header">
+        <h1>Property Notifications</h1>
+        <a href="/manage" class="btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+      </div>
+
+      <div class="notification-list">
+        <% if (notifications.length === 0) { %>
+          <div class="alert alert-info">No notifications found.</div>
+        <% } else { %>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Property</th>
+                <th>Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% notifications.forEach(notification => { %>
+                <tr>
+                  <td><%= new Date(notification.createdAt).toLocaleDateString() %></td>
+                  <td><%= notification.name %></td>
+                  <td><%= notification.email %></td>
+                  <td><%= notification.phone || 'N/A' %></td>
+                  <td>
+                    <% if (notification.propertyId) { %>
+                      <%= notification.propertyId.title %><br>
+                      <small><%= notification.propertyId.location %></small>
+                    <% } else { %>
+                      General Notification
+                    <% } %>
+                  </td>
+                  <td><%= notification.type %></td>
+                  <td>
+                    <span class="status-badge <%= notification.notified ? 'active' : 'pending' %>">
+                      <%= notification.notified ? 'Notified' : 'Pending' %>
+                    </span>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </main>
+  </body>
+</html> 

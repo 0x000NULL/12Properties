@@ -15,6 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="/javascripts/fontLoader.js" defer></script>
+    <script src="/javascripts/notifications.js" defer></script>
+    <meta name="csrf-token" content="<%= csrfToken %>">
   </head>
   <body>
     <nav class="main-nav">
@@ -98,7 +100,11 @@
               <span><i class="fas fa-calendar"></i> Spring 2025</span>
             </div>
             <div class="property-actions">
-              <button class="btn-view notify-me">Get Notified</button>
+              <button 
+                onclick="showNotificationModal('coming-soon', 'Premium Properties')" 
+                class="btn-view notify-me">
+                Get Notified
+              </button>
             </div>
           </div>
         </div>

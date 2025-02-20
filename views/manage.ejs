@@ -39,11 +39,16 @@
     <main class="manage-main">
       <div class="manage-header">
         <h1>Property Management</h1>
-        <form action="/manage/new" method="GET" style="display: inline;">
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-plus"></i> Add Property
-          </button>
-        </form>
+        <div class="manage-actions">
+          <a href="/manage/notifications" class="btn-secondary">
+            <i class="fas fa-bell"></i> View Notifications
+          </a>
+          <form action="/manage/new" method="GET" style="display: inline;">
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-plus"></i> Add Property
+            </button>
+          </form>
+        </div>
       </div>
 
       <div class="manage-content">
