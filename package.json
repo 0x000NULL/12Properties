@@ -1,6 +1,6 @@
 {
   "name": "12properties",
-  "version": "1.6.2",
+  "version": "1.6.9",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",

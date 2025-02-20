@@ -6,9 +6,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const nextBtn = document.querySelector('.next-btn');
   let currentIndex = 0;
 
-  // Function to update main image
+  // Function to update main image with dynamic aspect ratio
   function updateMainImage(imageUrl) {
-    mainImage.style.backgroundImage = `url('${imageUrl}')`;
+    // Create a temporary image to get the natural dimensions
+    const img = new Image();
+    img.onload = function() {
+      const aspectRatio = (this.height / this.width) * 100;
+      mainImage.style.paddingTop = `${aspectRatio}%`;
+      mainImage.style.backgroundImage = `url('${imageUrl}')`;
+    };
+    img.src = imageUrl;
   }
 
   // Function to update active thumbnail
@@ -16,6 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
     thumbnails.forEach(thumb => thumb.classList.remove('active'));
     thumbnails[index].classList.add('active');
     currentIndex = index;
+  }
+
+  // Initialize first image's aspect ratio
+  if (mainImage.style.backgroundImage) {
+    const initialUrl = mainImage.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
+    updateMainImage(initialUrl);
   }
 
   // Add click handlers to thumbnails

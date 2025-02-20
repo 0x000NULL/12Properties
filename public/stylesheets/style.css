@@ -523,16 +523,19 @@ footer {
 
 .gallery-container {
   width: 100%;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .main-image {
   position: relative;
   width: 100%;
-  padding-top: 66.67%; /* 3:2 aspect ratio */
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   background-color: #f5f5f5;
+  transition: padding-top 0.3s ease;
 }
 
 .gallery-nav {
@@ -545,6 +548,11 @@ footer {
   padding: 1rem;
   cursor: pointer;
   z-index: 2;
+  transition: opacity 0.3s ease;
+}
+
+.gallery-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .prev-btn {
@@ -1621,4 +1629,25 @@ th {
 .property-card.coming-soon:hover .coming-soon-overlay i {
   transform: scale(1.1);
   transition: transform 0.3s ease;
+}
+
+/* Add smooth transitions for a more polished feel */
+.main-image {
+  transition: padding-top 0.3s ease, background-image 0.3s ease;
+}
+
+/* Ensure the container doesn't collapse during transition */
+.gallery-container {
+  min-height: 300px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gallery-container {
+    min-height: 200px;
+  }
+  
+  .main-image {
+    min-height: 200px;
+  }
 }
