@@ -113,19 +113,21 @@
             <span class="property-location"><i class="fas fa-map-marker-alt"></i> <%= property.location %></span>
             <div class="property-pricing">
               <span class="property-type"><%= property.listingType === 'rental' ? 'For Rent' : 'For Sale' %></span>
-              <span class="property-price">
-                <% if (property.priceInterval === 'monthly') { %>
-                  $<%= property.price.toLocaleString() %> per month
-                <% } else { %>
-                  $<%= property.price.toLocaleString() %>
-                <% } %>
-              </span>
             </div>
-            <span class="property-status"><%= property.status %></span>
           </div>
         </div>
 
         <div class="property-stats">
+          <div class="stat">
+            <i class="fas fa-tag"></i>
+            <span>
+              <% if (property.priceInterval === 'monthly') { %>
+                $<%= property.price.toLocaleString() %> per month
+              <% } else { %>
+                $<%= property.price.toLocaleString() %>
+              <% } %>
+            </span>
+          </div>
           <div class="stat">
             <i class="fas fa-bed"></i>
             <span><%= property.beds %> Beds</span>
