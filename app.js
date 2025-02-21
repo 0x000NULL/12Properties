@@ -84,15 +84,18 @@ app.use(helmet({
         "'self'",
         "'unsafe-inline'",
         "'unsafe-eval'",
-        "https://cdnjs.cloudflare.com"
+        "https://cdnjs.cloudflare.com",
+        "https://www.google.com",
+        "https://www.gstatic.com"
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       mediaSrc: ["'self'"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "https://www.google.com"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
-      formAction: ["'self'"]
+      formAction: ["'self'"],
+      frameSrc: ["'self'", "https://www.google.com"]
     }
   },
   crossOriginEmbedderPolicy: { policy: "require-corp" },

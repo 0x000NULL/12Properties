@@ -1,1 +1,1 @@
-add all changes made with detail descriptions and reasonings to @changelog.md  with a header with the date, time, version from @package.json  , and a topic that summarizes the changes. This should go above the previous changes.
+Please add all changes made in the @Codebase  with detail descriptions and reasonings to @changelog.md   with a header with the date, time, version from @package.json   , and a topic that summarizes the changes. This should go above the previous changes.

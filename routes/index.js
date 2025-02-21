@@ -5,6 +5,7 @@ const User = require('../models/User');
 const transporter = require('../config/mailer');
 const csrf = require('csurf');
 const NodeCache = require('node-cache');
+const axios = require('axios');
 
 // Add CSRF protection
 const csrfProtection = csrf({ cookie: true });
@@ -32,6 +33,63 @@ async function getFeaturedProperties() {
 // Add this function if you need to clear the cache
 function clearPropertiesCache() {
   cache.del('featured_properties');
+}
+
+// Verify reCAPTCHA token
+async function verifyRecaptcha(token) {
+  try {
+    if (!token) {
+      throw new Error('No reCAPTCHA token provided');
+    }
+
+    if (!process.env.RECAPTCHA_SECRET_KEY) {
+      throw new Error('reCAPTCHA secret key not configured');
+    }
+
+    console.log('Verifying reCAPTCHA token with Google');
+    const response = await axios.post(
+      'https://www.google.com/recaptcha/api/siteverify',
+      null,
+      {
+        params: {
+          secret: process.env.RECAPTCHA_SECRET_KEY,
+          response: token
+        }
+      }
+    );
+    
+    console.log('reCAPTCHA response:', response.data);
+    
+    if (!response.data) {
+      throw new Error('Invalid reCAPTCHA verification response');
+    }
+
+    // Log suspicious activity
+    if (response.data.score < 0.5) {
+      console.warn('Suspicious reCAPTCHA score:', {
+        score: response.data.score,
+        action: response.data.action,
+        timestamp: response.data.challenge_ts
+      });
+    }
+
+    return {
+      success: response.data.success && response.data.score >= 0.5,
+      score: response.data.score,
+      action: response.data.action,
+      timestamp: response.data.challenge_ts
+    };
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', {
+      error: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 }
 
 /* GET home page. */
@@ -128,8 +186,42 @@ router.get('/property/:id', async function(req, res, next) {
 /* POST contact form */
 router.post('/contact', csrfProtection, async function(req, res, next) {
   try {
-    const { name, email, phone, message } = req.body;
+    // Verify reCAPTCHA first
+    const recaptchaResult = await verifyRecaptcha(req.body['g-recaptcha-response']);
+    
+    if (!recaptchaResult.success) {
+      // Return JSON response for AJAX handling
+      return res.status(400).json({
+        error: recaptchaResult.error || 'reCAPTCHA verification failed',
+        field: 'recaptcha'
+      });
+    }
 
+    // Log low scores but still allow submission
+    if (recaptchaResult.score < 0.7) {
+      console.warn('Low reCAPTCHA score for contact submission:', {
+        score: recaptchaResult.score,
+        ip: req.ip,
+        timestamp: new Date(),
+        userAgent: req.headers['user-agent'],
+        formData: {
+          name: req.body.name,
+          email: req.body.email,
+          // Don't log message content for privacy
+          messageLength: req.body.message?.length
+        }
+      });
+    }
+
+    // Validate required fields
+    if (!req.body.name || !req.body.email || !req.body.message) {
+      return res.status(400).json({
+        error: 'All required fields must be filled out',
+        field: 'form'
+      });
+    }
+
+    const { name, email, phone, message } = req.body;
     const properties = await getFeaturedProperties();
 
     // Send immediate success response
@@ -181,14 +273,10 @@ router.post('/contact', csrfProtection, async function(req, res, next) {
   } catch (error) {
     console.error('Contact form error:', error);
     
-    const properties = await getFeaturedProperties();
-    
-    res.render('index', {
-      title: 'Luxury Estates | Premium Properties',
-      properties: properties,
-      user: req.session.user || null,
-      csrfToken: req.csrfToken(),
-      contactError: error.message || 'Sorry, there was an error sending your message. Please try again.'
+    // Return JSON error for AJAX handling
+    res.status(500).json({
+      error: error.message || 'An error occurred while processing your request',
+      field: error.field || 'form'
     });
   }
 });

@@ -1,6 +1,6 @@
 {
   "name": "12properties",
-  "version": "1.7.29",
+  "version": "1.8.12",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -35,6 +35,7 @@
     "node-cache": "^5.1.2",
     "nodemailer": "^6.10.0",
     "sharp": "^0.33.2",
-    "xss-clean": "^0.1.4"
+    "xss-clean": "^0.1.4",
+    "axios": "^1.6.2"
   }
 }

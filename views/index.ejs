@@ -14,9 +14,16 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <meta name="recaptcha-key" content="<%= process.env.RECAPTCHA_SITE_KEY %>">
+    <script>
+    // Verify reCAPTCHA key is loaded
+    console.log('reCAPTCHA site key:', document.querySelector('meta[name="recaptcha-key"]').content);
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js?render=<%= process.env.RECAPTCHA_SITE_KEY %>" async defer></script>
     <script src="/javascripts/fontLoader.js" defer></script>
     <script src="/javascripts/notifications.js" defer></script>
-    <meta name="csrf-token" content="<%= csrfToken %>">
+    <script src="/javascripts/recaptcha.js" defer></script>
   </head>
   <body>
     <nav class="main-nav">
@@ -114,8 +121,9 @@
     <section id="contact" class="section">
       <h2>Connect With Us</h2>
       <div class="contact-container">
-        <form class="contact-form" action="/contact" method="POST">
+        <form class="contact-form" action="/contact" method="POST" id="contactForm">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
           <input type="text" name="name" placeholder="Name" required>
           <input type="email" name="email" placeholder="Email" required>
           <input type="tel" name="phone" placeholder="Phone">
@@ -143,20 +151,20 @@
         </div>
         <div class="footer-section">
           <h3>Contact</h3>
-          <p>Email: info@12mgt.com</p>
-          <p>Phone: +1 (555) 123-4567</p>
+          <p>Email: properties@12mgt.com</p>
+          <!-- <p>Phone: +1 (555) 123-4567</p> -->
         </div>
-        <div class="footer-section">
+        <!-- <div class="footer-section">
           <h3>Follow Us</h3>
           <div class="social-links">
             <a href="#"><i class="fab fa-instagram"></i></a>
             <a href="#"><i class="fab fa-facebook"></i></a>
             <a href="#"><i class="fab fa-linkedin"></i></a>
           </div>
-        </div>
+        </div> -->
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2024 12 Properties. All rights reserved.</p>
+        <p>&copy; 2025 12 Properties. All rights reserved.</p>
       </div>
     </footer>
   </body>
