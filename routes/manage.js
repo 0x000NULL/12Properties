@@ -401,6 +401,37 @@ router.post('/edit/:id',
           console.log('Updated videos array:', property.videos);
         }
       }
+      
+      // Process deleted images
+      if (req.body.deleteImages) {
+        try {
+          const deleteIndices = JSON.parse(req.body.deleteImages);
+          if (Array.isArray(deleteIndices) && deleteIndices.length > 0) {
+            console.log('Removing images at indices:', deleteIndices);
+            // Filter out the images that should be deleted
+            property.images = property.images.filter((img, idx) => !deleteIndices.includes(idx.toString()));
+            console.log('Images after deletion:', property.images);
+          }
+        } catch (e) {
+          console.error('Error processing deleteImages:', e);
+        }
+      }
+
+      // Handle setting an existing image as main image
+      if (req.body.setMainImage) {
+        try {
+          const mainImageIndex = parseInt(req.body.setMainImage);
+          if (!isNaN(mainImageIndex) && property.images && property.images[mainImageIndex]) {
+            // Move the selected image to mainImage
+            property.mainImage = property.images[mainImageIndex];
+            // Remove it from the images array
+            property.images.splice(mainImageIndex, 1);
+            console.log('Set new main image:', property.mainImage);
+          }
+        } catch (e) {
+          console.error('Error setting main image:', e);
+        }
+      }
 
       await property.save();
       console.log('Property saved successfully');

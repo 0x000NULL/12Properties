@@ -13,6 +13,62 @@ function initializeImageHandlers() {
       onEnd: updateImageOrder
     });
 
+    // Add delete handlers to existing images
+    imageGrid.querySelectorAll('.delete-image').forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to remove this image?')) {
+          const container = this.closest('.image-container');
+          const index = container.dataset.index;
+          
+          // Add to deleteImages hidden input if this is an existing image
+          const deleteImagesInput = document.getElementById('deleteImages');
+          if (deleteImagesInput) {
+            const currentDeleted = deleteImagesInput.value ? 
+              JSON.parse(deleteImagesInput.value) : [];
+            currentDeleted.push(index);
+            deleteImagesInput.value = JSON.stringify(currentDeleted);
+          }
+          
+          container.remove();
+          updateImageOrder();
+        }
+      });
+    });
+
+    // Add "set as main image" handlers to existing images
+    imageGrid.querySelectorAll('.set-main-image').forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const container = this.closest('.image-container');
+        const imageSrc = container.querySelector('img').src;
+        const index = container.dataset.index;
+        
+        // Update main image preview if it exists
+        if (mainImagePreview) {
+          mainImagePreview.src = imageSrc;
+        }
+        
+        // If we have a file input, clear it since we're using an existing image
+        if (mainImageInput) {
+          mainImageInput.value = '';
+        }
+
+        // Add hidden input for setMainImage if it doesn't exist
+        let setMainImageInput = document.getElementById('setMainImage');
+        if (!setMainImageInput) {
+          setMainImageInput = document.createElement('input');
+          setMainImageInput.type = 'hidden';
+          setMainImageInput.id = 'setMainImage';
+          setMainImageInput.name = 'setMainImage';
+          form.appendChild(setMainImageInput);
+        }
+        setMainImageInput.value = index;
+        
+        alert('Main image updated. Save changes to apply.');
+      });
+    });
+
     // Handle image uploads
     imageInput.addEventListener('change', function(e) {
       const files = Array.from(this.files);
@@ -46,6 +102,36 @@ function initializeImageHandlers() {
               container.remove();
               updateImageOrder();
             }
+          });
+          
+          // Add "set as main image" handler
+          container.querySelector('.set-main-image').addEventListener('click', function(e) {
+            e.preventDefault();
+            const imageSrc = container.querySelector('img').src;
+            const index = container.dataset.index;
+            
+            // Update main image preview if it exists
+            if (mainImagePreview) {
+              mainImagePreview.src = imageSrc;
+            }
+            
+            // If we have a file input, clear it since we're using an existing image
+            if (mainImageInput) {
+              mainImageInput.value = '';
+            }
+
+            // Add hidden input for setMainImage if it doesn't exist
+            let setMainImageInput = document.getElementById('setMainImage');
+            if (!setMainImageInput) {
+              setMainImageInput = document.createElement('input');
+              setMainImageInput.type = 'hidden';
+              setMainImageInput.id = 'setMainImage';
+              setMainImageInput.name = 'setMainImage';
+              form.appendChild(setMainImageInput);
+            }
+            setMainImageInput.value = index;
+            
+            alert('Main image updated. Save changes to apply.');
           });
         };
         reader.readAsDataURL(file);
