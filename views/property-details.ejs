@@ -16,6 +16,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="/javascripts/fontLoader.js" defer></script>
     <script src="/javascripts/property-details.js" defer></script>
+    <style>
+      .footer-section.legal-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .footer-section.legal-section a {
+        color: #fff;
+        text-decoration: none;
+        transition: opacity 0.3s ease;
+        padding: 0.25rem 0;
+      }
+
+      .footer-section.legal-section a:hover {
+        opacity: 0.8;
+      }
+    </style>
   </head>
   <body>
     <nav class="main-nav">
@@ -194,13 +212,11 @@
           <p>Email: info@12mgt.com</p>
           <p>Phone: +1 (555) 123-4567</p>
         </div>
-        <div class="footer-section">
-          <h3>Follow Us</h3>
-          <div class="social-links">
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-facebook"></i></a>
-            <a href="#"><i class="fab fa-linkedin"></i></a>
-          </div>
+        <div class="footer-section legal-section">
+          <h3>Legal</h3>
+          <a href="/legal">Terms & Conditions</a>
+          <a href="/legal#privacy">Privacy Policy</a>
+          <a href="/legal#disclosures">Disclosures</a>
         </div>
       </div>
       <div class="footer-bottom">

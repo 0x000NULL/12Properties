@@ -281,4 +281,11 @@ router.post('/contact', csrfProtection, async function(req, res, next) {
   }
 });
 
+/* GET legal page */
+router.get('/legal', function(req, res, next) {
+  res.render('legal', { 
+    title: 'Legal Documents | 12 Properties'
+  });
+});
+
 module.exports = router;

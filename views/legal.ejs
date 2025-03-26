@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Legal Documents | 12 Properties</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Preload Font Awesome -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Load Stylesheets -->
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="/javascripts/fontLoader.js" defer></script>
+    <style>
+      .legal-main {
+        padding: 2rem 5%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-top: 6rem;
+      }
+
+      .main-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .legal-container {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-top: 1rem;
+      }
+
+      .legal-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .legal-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 1rem;
+      }
+
+      .legal-header p {
+        color: #666;
+        font-size: 1.1rem;
+      }
+
+      .table-of-contents {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-bottom: 3rem;
+      }
+
+      .table-of-contents h2 {
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 1rem;
+        font-family: 'Playfair Display', serif;
+      }
+
+      .table-of-contents ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .table-of-contents li {
+        margin: 0.5rem 0;
+      }
+
+      .table-of-contents a {
+        color: #2c5282;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: color 0.3s ease;
+      }
+
+      .table-of-contents a:hover {
+        color: #1a365d;
+      }
+
+      .table-of-contents i {
+        margin-right: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .legal-section {
+        margin-bottom: 4rem;
+        scroll-margin-top: 2rem;
+      }
+
+      .legal-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .legal-section h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .legal-content {
+        color: #4a5568;
+        line-height: 1.6;
+      }
+
+      .legal-content h3 {
+        font-size: 1.4rem;
+        color: #2d3748;
+        margin: 2rem 0 1rem;
+        font-family: 'Playfair Display', serif;
+      }
+
+      .legal-content p {
+        margin-bottom: 1.5rem;
+      }
+
+      .last-updated {
+        font-style: italic;
+        color: #718096;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+
+      @media (max-width: 768px) {
+        .legal-main {
+          padding: 1rem;
+        }
+
+        .legal-container {
+          padding: 1rem;
+        }
+
+        .legal-header h1 {
+          font-size: 2rem;
+        }
+
+        .legal-section h2 {
+          font-size: 1.6rem;
+        }
+      }
+      .footer-section.legal-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .footer-section.legal-section a {
+        color: #fff;
+        text-decoration: none;
+        transition: opacity 0.3s ease;
+        padding: 0.25rem 0;
+      }
+
+      .footer-section.legal-section a:hover {
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="logo"><img src="/images/12Properties Logo-01.png" alt="12 Properties Logo" class="logo-img"></div>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/properties">Properties</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </nav>
+
+    <main class="legal-main">
+      <div class="legal-container">
+        <div class="legal-header">
+          <h1>Legal Documents</h1>
+          <p>Important information about your rights and responsibilities when using our services</p>
+        </div>
+
+        <div class="table-of-contents">
+          <h2>Table of Contents</h2>
+          <ul>
+            <li><a href="#terms"><i class="fas fa-file-contract"></i> Terms and Conditions</a></li>
+            <li><a href="#privacy"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+            <li><a href="#disclosures"><i class="fas fa-info-circle"></i> Disclosures</a></li>
+          </ul>
+        </div>
+
+        <section id="terms" class="legal-section">
+          <h2>Terms and Conditions</h2>
+          <div class="legal-content">
+            <p class="last-updated">Last updated: <%= new Date().toLocaleDateString() %></p>
+            
+            <h3>1. Acceptance of Terms</h3>
+            <p>By accessing and using this website, you accept and agree to be bound by the terms and conditions of this agreement.</p>
+            
+            <h3>2. Use License</h3>
+            <p>Permission is granted to temporarily download one copy of the materials (information or software) on 12 Properties' website for personal, non-commercial transitory viewing only.</p>
+            
+            <h3>3. Disclaimer</h3>
+            <p>The materials on 12 Properties' website are provided on an 'as is' basis. 12 Properties makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+          </div>
+        </section>
+
+        <section id="privacy" class="legal-section">
+          <h2>Privacy Policy</h2>
+          <div class="legal-content">
+            <p class="last-updated">Last updated: <%= new Date().toLocaleDateString() %></p>
+            
+            <h3>1. Information We Collect</h3>
+            <p>We collect information that you provide directly to us, including but not limited to your name, email address, phone number, and any other information you choose to provide.</p>
+            
+            <h3>2. How We Use Your Information</h3>
+            <p>We use the information we collect to operate, maintain, and provide you with the features and functionality of the website.</p>
+            
+            <h3>3. Information Sharing</h3>
+            <p>We do not share your personal information with third parties except as described in this privacy policy.</p>
+          </div>
+        </section>
+
+        <section id="disclosures" class="legal-section">
+          <h2>Disclosures</h2>
+          <div class="legal-content">
+            <p class="last-updated">Last updated: <%= new Date().toLocaleDateString() %></p>
+            
+            <h3>1. Real Estate Disclosures</h3>
+            <p>All property information provided on this website is believed to be accurate but is not guaranteed. All properties are subject to prior sale, change, or withdrawal.</p>
+            
+            <h3>2. Equal Housing Opportunity</h3>
+            <p>12 Properties is committed to equal housing opportunity and makes all property listings available to any person regardless of race, color, religion, sex, handicap, familial status, or national origin.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3><img src="/images/12Properties Logo-01.png" alt="12 Properties Logo" class="footer-logo-img"></h3>
+          <p>Your gateway to exceptional living</p>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p>Email: properties@12mgt.com</p>
+        </div>
+        <div class="footer-section legal-section">
+          <h3>Legal</h3>
+          <a href="/legal">Terms & Conditions</a>
+          <a href="/legal#privacy">Privacy Policy</a>
+          <a href="/legal#disclosures">Disclosures</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 12 Properties. All rights reserved.</p>
+      </div>
+    </footer>
+  </body>
+</html> 
