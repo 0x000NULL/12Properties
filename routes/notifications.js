@@ -17,6 +17,24 @@ const validateNotification = [
   body('phone').optional().trim()
 ];
 
+// Opt-out route
+router.get('/opt-out/:notificationId', async (req, res) => {
+  try {
+    const notification = await PropertyNotification.findById(req.params.notificationId);
+    if (!notification) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    await PropertyNotification.findByIdAndDelete(req.params.notificationId);
+    
+    // Redirect to index page with success message
+    res.redirect('/?optOutSuccess=true');
+  } catch (error) {
+    console.error('Opt-out error:', error);
+    res.redirect('/?optOutError=true');
+  }
+});
+
 router.post('/notify', validateNotification, async (req, res) => {
   try {
     // Check for validation errors
@@ -48,6 +66,11 @@ router.post('/notify', validateNotification, async (req, res) => {
           <h2>Notification Confirmation</h2>
           <p>Hello ${name},</p>
           <p>Thank you for your interest! You will be notified when new properties become available.</p>
+          <hr>
+          <p style="font-size: 12px; color: #666;">
+            To opt out of future notifications, click here: 
+            <a href="${process.env.BASE_URL}/notifications/opt-out/${notification._id}">Opt Out</a>
+          </p>
         `
       };
 
@@ -90,6 +113,11 @@ router.post('/notify', validateNotification, async (req, res) => {
           <li>Location: ${property.location}</li>
           <li>Price: $${property.price.toLocaleString()}</li>
         </ul>
+        <hr>
+        <p style="font-size: 12px; color: #666;">
+          To opt out of future notifications, click here: 
+          <a href="${process.env.BASE_URL}/notifications/opt-out/${notification._id}">Opt Out</a>
+        </p>
       `
     };
 

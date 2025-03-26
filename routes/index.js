@@ -97,11 +97,17 @@ router.get('/', csrfProtection, async function(req, res, next) {
   try {
     const properties = await getFeaturedProperties();
     
+    // Handle opt-out messages
+    const optOutSuccess = req.query.optOutSuccess === 'true';
+    const optOutError = req.query.optOutError === 'true';
+    
     res.render('index', { 
       title: 'Luxury Estates | Premium Properties',
       properties: properties,
       user: req.session.user || null,
-      csrfToken: req.csrfToken()
+      csrfToken: req.csrfToken(),
+      optOutSuccess,
+      optOutError
     });
   } catch (err) {
     next(err);

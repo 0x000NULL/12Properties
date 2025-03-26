@@ -286,9 +286,9 @@ app.use((req, res, next) => {
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
-app.use('/manage', manageRouter);
-app.use('/api', notificationsRouter);
-app.use('/api', contactRouter);
+app.use('/manage', isAuthenticated, manageRouter);
+app.use('/notifications', notificationsRouter);
+app.use('/contact', contactRouter);
 
 // Redirect /login to /auth/login
 app.get('/login', (req, res) => {
