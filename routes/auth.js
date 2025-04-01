@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
-const { skip: skipCSRF } = require('../middleware/csrf');
+const { protect: csrfProtection, setToken, skip: skipCSRF } = require('../middleware/csrf');
 
 // Redirect from /login to /auth/login
 router.get('/', function(req, res) {
@@ -24,13 +24,13 @@ const validateLogin = [
   body('password').notEmpty().withMessage('Password is required')
 ];
 
-// Login page
-router.get('/login', function(req, res, next) {
+// Login page - apply setToken middleware to ensure CSRF token is available
+router.get('/login', setToken, function(req, res, next) {
   res.render('login', { 
     isLoggedIn: !!req.session?.user,
     user: req.session?.user || null,
     error: req.session.error,
-    csrfToken: req.csrfToken()
+    csrfToken: res.locals.csrfToken
   });
   // Clear any error messages after displaying them
   if (req.session) {
@@ -38,8 +38,8 @@ router.get('/login', function(req, res, next) {
   }
 });
 
-// Login POST handler
-router.post('/login', validateLogin, async function(req, res, next) {
+// Login POST handler - apply CSRF protection
+router.post('/login', csrfProtection, validateLogin, async function(req, res, next) {
   try {
     // Check for validation errors
     const errors = validationResult(req);
@@ -78,7 +78,7 @@ router.post('/login', validateLogin, async function(req, res, next) {
   }
 });
 
-// Logout handler
+// Logout handler - skip CSRF for logout
 router.post('/logout', skipCSRF, function(req, res, next) {
   req.session.destroy((err) => {
     if (err) {
@@ -88,7 +88,6 @@ router.post('/logout', skipCSRF, function(req, res, next) {
     res.redirect('/auth/login');
   });
 });
-
 
 module.exports = {
   router,

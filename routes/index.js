@@ -3,12 +3,8 @@ var router = express.Router();
 const Property = require('../models/Property');
 const User = require('../models/User');
 const transporter = require('../config/mailer');
-const csrf = require('csurf');
 const NodeCache = require('node-cache');
 const axios = require('axios');
-
-// Add CSRF protection
-const csrfProtection = csrf({ cookie: true });
 
 const cache = new NodeCache({ stdTTL: 300 }); // Cache for 5 minutes
 
@@ -93,7 +89,7 @@ async function verifyRecaptcha(token) {
 }
 
 /* GET home page. */
-router.get('/', csrfProtection, async function(req, res, next) {
+router.get('/', async function(req, res, next) {
   try {
     const properties = await getFeaturedProperties();
     
@@ -103,11 +99,11 @@ router.get('/', csrfProtection, async function(req, res, next) {
     
     res.render('index', { 
       title: 'Luxury Estates | Premium Properties',
-      properties: properties,
-      user: req.session.user || null,
-      csrfToken: req.csrfToken(),
+      properties,
+      user: req.session?.user || null,
       optOutSuccess,
-      optOutError
+      optOutError,
+      csrfToken: res.locals.csrfToken
     });
   } catch (err) {
     next(err);
@@ -204,7 +200,7 @@ router.get('/property/:id', async function(req, res, next) {
 });
 
 /* POST contact form */
-router.post('/contact', csrfProtection, async function(req, res, next) {
+router.post('/contact', async function(req, res, next) {
   try {
     // Verify reCAPTCHA first
     const recaptchaResult = await verifyRecaptcha(req.body['g-recaptcha-response']);
@@ -247,9 +243,9 @@ router.post('/contact', csrfProtection, async function(req, res, next) {
     // Send immediate success response
     res.render('index', {
       title: 'Luxury Estates | Premium Properties',
-      properties: properties,
-      user: req.session.user || null,
-      csrfToken: req.csrfToken(),
+      properties,
+      user: req.session?.user || null,
+      csrfToken: res.locals.csrfToken,
       contactSuccess: true
     });
 

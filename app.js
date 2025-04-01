@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const mongoSanitize = require('express-mongo-sanitize');
-const { protect: csrfProtection } = require('./middleware/csrf');
+const { protect: csrfProtection, setToken } = require('./middleware/csrf');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -54,14 +54,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Initialize session
 app.use(session(sessionConfig));
 
-// Apply CSRF protection after session initialization
-app.use(csrfProtection);
-
 // Make CSRF token available to views
-app.use((req, res, next) => {
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
+app.use(setToken);
+
+// Apply CSRF protection after session initialization and token generation
+app.use(csrfProtection);
 
 // Security middleware
 app.use(helmet({

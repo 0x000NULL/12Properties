@@ -1,68 +1,98 @@
-const csrf = require('csurf');
+const { doubleCsrf } = require('csrf-csrf');
 
-const csrfProtection = csrf({
-  cookie: true,
-  ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
-  value: (req) => {
+// Configure cookie options
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/'
+};
+
+// Create CSRF configuration
+const csrfConfig = doubleCsrf({
+  getSecret: (req) => req.session?.csrfSecret,
+  secret: process.env.CSRF_SECRET || 'your-secret-key',
+  cookieName: 'x-csrf-token',
+  cookieOptions,
+  size: 64,
+  getTokenFromRequest: (req) => {
     return (
-      req.body._csrf ||
-      req.query._csrf ||
+      req.body?._csrf ||
+      req.query?._csrf ||
       req.headers['csrf-token'] ||
       req.headers['x-csrf-token']
     );
   }
 });
 
+// Extract functions from configuration
+const { generateToken, doubleCsrfProtection } = csrfConfig;
+
 // Wrap CSRF protection with better error handling
 const protect = (req, res, next) => {
-  csrfProtection(req, res, (err) => {
-    if (err) {
-      if (err.code === 'EBADCSRFTOKEN') {
+  // Skip CSRF for GET requests
+  if (req.method === 'GET') {
+    // Generate and set token for GET requests
+    if (!req.session.csrfSecret) {
+      req.session.csrfSecret = require('crypto').randomBytes(32).toString('hex');
+    }
+    res.locals.csrfToken = generateToken(req, res);
+    return next();
+  }
+
+  try {
+    doubleCsrfProtection(req, res, (err) => {
+      if (err) {
         console.error('CSRF Error:', {
-          url: req.url,
           method: req.method,
-          token: req.body._csrf,
+          url: req.url,
+          body: req.body,
           headers: req.headers
         });
-        
-        // For GET requests, continue with new token
-        if (req.method === 'GET') {
-          return next();
-        }
-        
-        // For POST requests, return to form with error
-        return res.status(403).render('index', {
-          title: 'Luxury Estates | Premium Properties',
-          properties: [],
-          user: req.session.user || null,
-          csrfToken: req.csrfToken(),
-          contactError: 'Form submission failed. Please try again.'
+        return res.status(403).render('error', {
+          message: 'Invalid CSRF token',
+          error: { status: 403 }
         });
       }
-      return next(err);
-    }
-    next();
-  });
+      next();
+    });
+  } catch (error) {
+    console.error('CSRF Protection Error:', error);
+    next(error);
+  }
 };
 
 // Debug middleware
 const debugCsrf = (req, res, next) => {
-  console.log('\nCSRF Protection ----------------');
+  console.log('\nCSRF Debug ----------------');
   console.log('Method:', req.method);
-  console.log('Content-Type:', req.get('Content-Type'));
+  console.log('URL:', req.url);
   console.log('Session ID:', req.sessionID);
-  console.log('Headers:', req.headers);
-  if (typeof req.csrfToken === 'function') {
-    console.log('CSRF Token:', req.csrfToken());
-  } else {
-    console.log('CSRF Token: Not available');
-  }
-  console.log('--------------------------------\n');
+  console.log('CSRF Secret:', req.session?.csrfSecret ? 'Present' : 'Missing');
+  console.log('CSRF Token:', res.locals.csrfToken || 'Not set');
+  console.log('Request Token:', req.body?._csrf || req.query?._csrf || req.headers['csrf-token'] || 'None');
+  console.log('------------------------\n');
   next();
+};
+
+// Generate token middleware
+const setToken = (req, res, next) => {
+  try {
+    if (!req.session.csrfSecret) {
+      req.session.csrfSecret = require('crypto').randomBytes(32).toString('hex');
+    }
+    res.locals.csrfToken = generateToken(req, res);
+    next();
+  } catch (error) {
+    console.error('Token Generation Error:', error);
+    next(error);
+  }
 };
 
 module.exports = {
   protect,
   debugCsrf,
+  setToken,
+  generateToken,
   skip: (req, res, next) => next()
 }; 

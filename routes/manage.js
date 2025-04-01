@@ -189,7 +189,7 @@ router.get('/new', isAuthenticated, function(req, res) {
     },
     isNew: true,
     user: req.session.user,
-    csrfToken: req.csrfToken()
+    csrfToken: res.locals.csrfToken
   });
 });
 
@@ -198,25 +198,10 @@ router.post('/new',
   isAuthenticated,
   // Apply CSRF protection before multer
   (req, res, next) => {
-    // Extract CSRF token from query string
-    if (!req.query._csrf) {
-      return res.status(403).json({ error: 'CSRF token missing' });
-    }
     next();
   },
-  (req, res, next) => {
-    const uploadMiddleware = upload.fields(uploadFields);
-    uploadMiddleware(req, res, function(err) {
-      if (err) {
-        console.error('Upload error:', err);
-        return res.status(400).json({ 
-          error: err.message || 'File upload failed'
-        });
-      }
-      next();
-    });
-  },
-  async function(req, res) {
+  upload.fields(uploadFields),
+  async function(req, res, next) {
     try {
       console.log('Creating new property');
       console.log('Files received:', req.files);
@@ -302,7 +287,7 @@ router.get('/edit/:id', isAuthenticated, async function(req, res) {
       property: property,
       isNew: false,
       user: req.session.user,
-      csrfToken: req.csrfToken()
+      csrfToken: res.locals.csrfToken
     });
   } catch (err) {
     next(err);
@@ -312,25 +297,8 @@ router.get('/edit/:id', isAuthenticated, async function(req, res) {
 // Handle property update
 router.post('/edit/:id', 
   isAuthenticated,
-  (req, res, next) => {
-    const uploadMiddleware = upload.fields(uploadFields);
-    uploadMiddleware(req, res, function(err) {
-      if (err instanceof multer.MulterError) {
-        console.error('Multer error:', err);
-        return res.status(400).json({ 
-          error: `File upload error: ${err.message}`,
-          code: err.code
-        });
-      } else if (err) {
-        console.error('Unknown upload error:', err);
-        return res.status(500).json({ 
-          error: err.message || 'File upload failed'
-        });
-      }
-      next();
-    });
-  },
-  async function(req, res) {
+  upload.fields(uploadFields),
+  async function(req, res, next) {
     console.log('Processing edit request');
     console.log('Files received:', req.files);
     console.log('Body:', req.body);
@@ -516,7 +484,7 @@ router.get('/notifications', isAuthenticated, async function(req, res) {
       title: 'Property Notifications',
       notifications,
       user: req.session.user,
-      csrfToken: req.csrfToken()
+      csrfToken: res.locals.csrfToken
     });
   } catch (err) {
     console.error('Error fetching notifications:', err);
