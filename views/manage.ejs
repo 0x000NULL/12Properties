@@ -18,21 +18,17 @@
     <meta name="csrf-token" content="<%= csrfToken %>">
   </head>
   <body>
-    <nav class="main-nav dashboard">
+    <nav class="main-nav">
       <div class="logo"><img src="/images/12Properties Logo-01.png" alt="12 Properties Logo" class="logo-img"></div>
       <div class="nav-links">
         <a href="/">Home</a>
-        <a href="/properties">Properties</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-        <span class="user-menu">
-          <i class="fas fa-user"></i>
-          <%= user.name %>
-          <form action="/auth/logout" method="POST" class="logout-form">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button type="submit" class="btn-text">Logout</button>
-          </form>
-        </span>
+        <a href="/properties" class="active">Properties</a>
+        <% if (user) { %>
+          <a href="/manage" class="nav-link">Manage</a>
+          <a href="/auth/logout" class="nav-link">Log Out</a>
+        <% } else { %>
+          <a href="/auth/login" class="nav-link">Log In</a>
+        <% } %>
       </div>
     </nav>
 

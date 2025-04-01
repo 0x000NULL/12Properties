@@ -83,7 +83,6 @@ app.use(helmet({
       scriptSrc: [
         "'self'",
         "'unsafe-inline'",
-        "'unsafe-eval'",
         "https://cdnjs.cloudflare.com",
         "https://www.google.com",
         "https://www.gstatic.com"
@@ -98,6 +97,12 @@ app.use(helmet({
       frameSrc: ["'self'", "https://www.google.com"]
     }
   },
+  // Enable HSTS in production only
+  strictTransportSecurity: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000, // 1 year in seconds
+    includeSubDomains: true,
+    preload: true
+  } : false,
   crossOriginEmbedderPolicy: { policy: "require-corp" },
   crossOriginOpenerPolicy: { policy: "same-origin" },
   crossOriginResourcePolicy: { policy: "same-origin" },

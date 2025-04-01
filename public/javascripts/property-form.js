@@ -1,5 +1,6 @@
 // Define all functions at the top level
 function initializeImageHandlers() {
+  const form = document.getElementById('propertyForm');
   const imageInput = document.querySelector('input[name="images"]');
   const imageGrid = document.querySelector('.image-grid');
   const mainImageInput = document.querySelector('input[name="mainImage"]');
@@ -44,6 +45,9 @@ function initializeImageHandlers() {
         const imageSrc = container.querySelector('img').src;
         const index = container.dataset.index;
         
+        // Get the current main image preview
+        const currentMainImage = mainImagePreview ? mainImagePreview.src : null;
+        
         // Update main image preview if it exists
         if (mainImagePreview) {
           mainImagePreview.src = imageSrc;
@@ -52,6 +56,68 @@ function initializeImageHandlers() {
         // If we have a file input, clear it since we're using an existing image
         if (mainImageInput) {
           mainImageInput.value = '';
+        }
+
+        // If there was a current main image, add it to the additional images grid
+        if (currentMainImage) {
+          const newContainer = document.createElement('div');
+          newContainer.className = 'image-container';
+          const nextIndex = imageGrid.querySelectorAll('.image-container').length;
+          newContainer.dataset.index = nextIndex;
+          newContainer.innerHTML = `
+            <img src="${currentMainImage}" alt="Property image">
+            <div class="image-actions">
+              <button type="button" class="delete-image" title="Delete image">
+                <i class="fas fa-times"></i>
+              </button>
+              <button type="button" class="set-main-image" title="Set as main image">
+                <i class="fas fa-star"></i>
+              </button>
+            </div>
+            <div class="drag-handle" title="Drag to reorder">
+              <i class="fas fa-grip-lines"></i>
+            </div>
+          `;
+          imageGrid.appendChild(newContainer);
+          
+          // Add delete handler
+          newContainer.querySelector('.delete-image').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to remove this image?')) {
+              newContainer.remove();
+              updateImageOrder();
+            }
+          });
+          
+          // Add "set as main image" handler
+          newContainer.querySelector('.set-main-image').addEventListener('click', function(e) {
+            e.preventDefault();
+            const imageSrc = newContainer.querySelector('img').src;
+            const index = newContainer.dataset.index;
+            
+            // Update main image preview if it exists
+            if (mainImagePreview) {
+              mainImagePreview.src = imageSrc;
+            }
+            
+            // If we have a file input, clear it since we're using an existing image
+            if (mainImageInput) {
+              mainImageInput.value = '';
+            }
+
+            // Add hidden input for setMainImage if it doesn't exist
+            let setMainImageInput = document.getElementById('setMainImage');
+            if (!setMainImageInput) {
+              setMainImageInput = document.createElement('input');
+              setMainImageInput.type = 'hidden';
+              setMainImageInput.id = 'setMainImage';
+              setMainImageInput.name = 'setMainImage';
+              form.appendChild(setMainImageInput);
+            }
+            setMainImageInput.value = index;
+            
+            alert('Main image updated. Save changes to apply.');
+          });
         }
 
         // Add hidden input for setMainImage if it doesn't exist

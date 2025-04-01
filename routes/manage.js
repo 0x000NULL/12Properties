@@ -417,15 +417,40 @@ router.post('/edit/:id',
         }
       }
 
+      // Handle image reordering
+      if (req.body.imageOrder) {
+        try {
+          const newOrder = JSON.parse(req.body.imageOrder);
+          if (Array.isArray(newOrder) && newOrder.length > 0) {
+            console.log('Reordering images according to:', newOrder);
+            // Create a new array with images in the specified order
+            property.images = newOrder.map(index => property.images[index]);
+            console.log('Images after reordering:', property.images);
+          }
+        } catch (e) {
+          console.error('Error processing imageOrder:', e);
+        }
+      }
+
       // Handle setting an existing image as main image
       if (req.body.setMainImage) {
         try {
           const mainImageIndex = parseInt(req.body.setMainImage);
           if (!isNaN(mainImageIndex) && property.images && property.images[mainImageIndex]) {
+            // Store the current main image
+            const currentMainImage = property.mainImage;
+            
             // Move the selected image to mainImage
             property.mainImage = property.images[mainImageIndex];
-            // Remove it from the images array
+            
+            // Remove the selected image from the images array
             property.images.splice(mainImageIndex, 1);
+            
+            // Add the previous main image to the images array
+            if (currentMainImage) {
+              property.images.push(currentMainImage);
+            }
+            
             console.log('Set new main image:', property.mainImage);
           }
         } catch (e) {

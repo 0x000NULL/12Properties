@@ -132,17 +132,23 @@ router.get('/properties', async (req, res) => {
       .limit(limit)
       .sort({ createdAt: -1 }); // Sort by newest first
     
-    // Format price for display
-    const formattedProperties = properties.map(p => ({
-      ...p.toObject(),
-      price: p.price.toLocaleString()
-    }));
+    // Format price for display and ensure main image is correct
+    const formattedProperties = properties.map(p => {
+      const property = p.toObject();
+      return {
+        ...property,
+        price: property.price.toLocaleString(),
+        // Ensure mainImage is the correct one from the property
+        mainImage: property.mainImage || (property.images && property.images[0]) || '/images/default-property.jpg'
+      };
+    });
 
     res.render('properties', {
       properties: formattedProperties,
       currentPage: page,
       totalPages,
-      totalProperties
+      totalProperties,
+      user: req.session.user || null
     });
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -183,7 +189,15 @@ router.get('/property/:id', async function(req, res, next) {
       }
     };
 
-    res.render('property-details', { property: formattedProperty });
+    // Add the main image to the images array if it's not already there
+    if (formattedProperty.mainImage && !formattedProperty.images.includes(formattedProperty.mainImage)) {
+      formattedProperty.images.unshift(formattedProperty.mainImage);
+    }
+
+    res.render('property-details', { 
+      property: formattedProperty,
+      user: req.session.user || null
+    });
   } catch (error) {
     next(error);
   }

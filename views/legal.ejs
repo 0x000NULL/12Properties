@@ -181,9 +181,13 @@
       <div class="logo"><img src="/images/12Properties Logo-01.png" alt="12 Properties Logo" class="logo-img"></div>
       <div class="nav-links">
         <a href="/">Home</a>
-        <a href="/properties">Properties</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
+        <a href="/properties" class="active">Properties</a>
+        <% if (user) { %>
+          <a href="/manage" class="nav-link">Manage</a>
+          <a href="/auth/logout" class="nav-link">Log Out</a>
+        <% } else { %>
+          <a href="/auth/login" class="nav-link">Log In</a>
+        <% } %>
       </div>
     </nav>
 
@@ -231,7 +235,7 @@
             <p>We use the information we collect to operate, maintain, and provide you with the features and functionality of the website.</p>
             
             <h3>3. Information Sharing</h3>
-            <p>We do not share your personal information with third parties except as described in this privacy policy.</p>
+            <p>We do not share your personal information with third parties.</p>
           </div>
         </section>
 

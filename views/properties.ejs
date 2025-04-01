@@ -42,9 +42,12 @@
       <div class="nav-links">
         <a href="/">Home</a>
         <a href="/properties" class="active">Properties</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-        <a href="/auth/login" class="nav-link">Login</a>
+        <% if (user) { %>
+          <a href="/manage" class="nav-link">Manage</a>
+          <a href="/auth/logout" class="nav-link">Log Out</a>
+        <% } else { %>
+          <a href="/auth/login" class="nav-link">Log In</a>
+        <% } %>
       </div>
     </nav>
 

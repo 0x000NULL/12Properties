@@ -4,6 +4,11 @@
  * Module dependencies.
  */
 require('dotenv').config();
+const { validateEnv } = require('../config/environment');
+
+// Validate environment variables before proceeding
+validateEnv();
+
 const app = require('../app');
 const debug = require('debug')('12properties:server');
 const http = require('http');
