@@ -50,7 +50,7 @@ function showNotificationModal(propertyId, propertyTitle) {
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/notify', {
+      const response = await fetch('/notifications/notify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
